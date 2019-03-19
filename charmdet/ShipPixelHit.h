@@ -34,7 +34,7 @@ ShipPixelHit operator=(const ShipPixelHit& other);
 
 Float_t pixelx[336];
 Float_t pixely[160];
-
+Int_t pixelmod[12];
 
 ClassDef(ShipPixelHit, 1)
 
