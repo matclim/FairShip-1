@@ -17,12 +17,12 @@ Int_t Getpixely(Int_t ycoor){
 return pixely[ycoor]i;
 }
 
-void Setpixelx(Int_t xcoor, Float_t dim){
+void Setpixelx(Int_t pixelmodule,Int_t xcoor, Float_t dim){
 if(xcoor <= sizeof(pixelx)/sizeof(*pixelx)){
 pixelx[xcoor]=dim;}
 }
 
-void Setpixely(Int_t ycoor, Float_t dim){
+void Setpixely(Int_t pixelmodule,Int_t ycoor, Float_t dim){
 if(ycoor <= sizeof(pixely)/sizeof(*pixely)){
 pixely[ycoor]=dim;}
 }
