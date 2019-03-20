@@ -24,28 +24,11 @@ public:
    int32_t GetDetectorID();
    int32_t GetModule();
    void EndPoints(TVector3 &pixel, int detID);
-   void MakePositionMap(std::map<int, TVector3> positionMap);
    void Print();
    int32_t GetTimeOverThreshold() const {return ToT;}
-
-Int_t Getpixelx(Int_t xcoor){
-return pixelx[xcoor]i;
-}
-
-Int_t Getpixely(Int_t ycoor){
-return pixely[ycoor]i;
-}
-
-void Setpixelx(Int_t xcoor, Float_t dim){
-if(xcoor <= sizeof(pixelx)/sizeof(*pixelx)){
-pixelx[xcoor]=dim;}
-}
-
-void Setpixely(Int_t ycoor, Float_t dim){
-if(ycoor <= sizeof(pixely)/sizeof(*pixely)){
-pixely[ycoor]=dim;}
-}
-
+   void SetPixelMapping();
+   Float_t GetPixelCoor();
+   Text_t Get PixelID;
 private:
 
 ShipPixelHit(const ShipPixelHit& other); 
@@ -59,7 +42,9 @@ ShipPixelHit operator=(const ShipPixelHit& other);
 
    int32_t detID;
    uint16_t tot;
-
+   Float_t pixelx[12][336];
+   Float_t pixely[12][160];
+   Float_t pixelID[12][336][160];
    ClassDef(ShipPixelHit, 1);
 };
 
