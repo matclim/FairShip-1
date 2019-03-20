@@ -25,5 +25,27 @@ pixely[j][i](i-1)*0.005+0.0025;
 }
 }
 
+ShipPixelHit::SetPixelIDs(){
+
+
+  int map_index=0;
+  for (int partID=0; partID<3; partID++) {
+    for (int moduleID=0;moduleID<8; moduleID++ ) {
+      for (int row=1; row<337; row++) {
+        for (int column=1; column<81; column++) {
+          pixelID[row][column] = 10000000*partID + 1000000*moduleID + 1000*row + column;
+        }
+      }
+    }
+  }
+
+
+
+}
+
+
+
+}
+
 
 ClassImp(ShipPixelHit)
