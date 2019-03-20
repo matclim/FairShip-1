@@ -8,6 +8,7 @@ ${CMAKE_SOURCE_DIR}/shipdata
 ${CMAKE_SOURCE_DIR}/charmdet
 ${CMAKE_SOURCE_DIR}/online
 ${CMAKE_SOURCE_DIR}/genfit/core/include
+${CMAKE_SOURCE_DIR}/genfit/trackReps/include
 ${ROOT_INCLUDE_DIR} 
 )
 
@@ -29,6 +30,8 @@ BoxPoint.cxx
 BoxContFact.cxx
 Spectrometer.cxx
 SpectrometerPoint.cxx
+PixelModules.cxx
+PixelModulesPoint.cxx
 MufluxSpectrometer.cxx
 MufluxSpectrometerHit.cxx
 MufluxSpectrometerPoint.cxx
@@ -41,6 +44,7 @@ ScintillatorHit.cxx
 ShipPixelHit.cxx
 ReProcessAbsorber.cxx
 RPCTrack.cxx
+MufluxReco.cxx
 )
 
 Set(HEADERS )

@@ -6,7 +6,6 @@
 #include <tuple>
 
 // ROOT headers
-#include "TClonesArray.h"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/RVec.hxx"
 
@@ -24,13 +23,9 @@
 using DriftTubes::ChannelId;
 
 // DriftTubeUnpack: Constructor
-DriftTubeUnpack::DriftTubeUnpack()
-   : fRawTubes(new TClonesArray("MufluxSpectrometerHit")), fRawLateTubes(new TClonesArray("MufluxSpectrometerHit")),
-     fRawScintillator(new TClonesArray("ScintillatorHit")), fRawBeamCounter(new TClonesArray("ScintillatorHit")),
-     fRawMasterTrigger(new TClonesArray("ScintillatorHit")), fRawTriggers(new TClonesArray("ScintillatorHit")),
-     fPartitionId(0x0C00)
-{
-}
+DriftTubeUnpack::DriftTubeUnpack() = default;
+
+DriftTubeUnpack::DriftTubeUnpack(bool charm) : fCharm(charm) {}
 
 // Virtual DriftTubeUnpack: Public method
 DriftTubeUnpack::~DriftTubeUnpack() = default;
@@ -38,6 +33,8 @@ DriftTubeUnpack::~DriftTubeUnpack() = default;
 // Init: Public method
 Bool_t DriftTubeUnpack::Init()
 {
+   LOG(INFO) << "DriftTubeUnpack : Initialising in " << (fCharm ? "charm" : "muon flux") << " mode."
+             << FairLogger::endl;
    Register();
    return kTRUE;
 }
@@ -52,7 +49,10 @@ void DriftTubeUnpack::Register()
    }
    fMan->Register("Digi_MufluxSpectrometerHits", "DriftTubes", fRawTubes.get(), kTRUE);
    fMan->Register("Digi_LateMufluxSpectrometerHits", "DriftTubes", fRawLateTubes.get(), kTRUE);
-   fMan->Register("Digi_Scintillators", "DriftTubes", fRawScintillator.get(), kTRUE);
+   if (!fCharm) {
+      // Scintillator was removed for charm
+      fMan->Register("Digi_Scintillators", "DriftTubes", fRawScintillator.get(), kTRUE);
+   }
    fMan->Register("Digi_BeamCounters", "DriftTubes", fRawBeamCounter.get(), kTRUE);
    fMan->Register("Digi_MasterTrigger", "DriftTubes", fRawMasterTrigger.get(), kTRUE);
    fMan->Register("Digi_Triggers", "DriftTubes", fRawTriggers.get(), kTRUE);
@@ -176,16 +176,25 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
       std::tie(channel, hit_time, time_over_threshold, first, matched) = match;
       auto hit_flags = matched ? flags : flags | DriftTubes::NoWidth;
       auto id = *(reinterpret_cast<ChannelId *>(&channel));
-      auto detectorId = id.GetDetectorId();
+      auto detectorId = fCharm ? id.GetDetectorIdCharm() : id.GetDetectorId();
       auto TDC = id.TDC;
       if (detectorId == 0) {
          // Trigger
          trigger++;
-         trigger_times[TDC] =
-            (trigger_times.find(TDC) != trigger_times.end()) ? std::min(hit_time, trigger_times[TDC]) : hit_time;
+         if (trigger_times.find(TDC) != trigger_times.end()) {
+            LOG(DEBUG) << "Found time " << trigger_times[TDC] << " for TDC " << TDC << FairLogger::endl;
+            trigger_times[TDC] = std::min(hit_time, trigger_times[TDC]);
+         } else {
+            LOG(DEBUG) << "Inserting new time " << hit_time << FairLogger::endl;
+            trigger_times[TDC] = hit_time;
+         }
+         LOG(DEBUG) << TDC << '\t' << hit_time << '\t' << trigger_times[TDC] << FairLogger::endl;
          new ((*fRawTriggers)[nhitsTriggers])
             ScintillatorHit(detectorId, 0.098 * Float_t(hit_time), time_over_threshold, hit_flags, channel);
          nhitsTriggers++;
+      } else if (detectorId == -2) {
+         // Blacklisted channel
+         continue;
       } else if (detectorId == 1) {
          // Master trigger
          //
@@ -203,6 +212,11 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
          nhitsBeamCounter++;
       } else if (detectorId == 6 || detectorId == 7) {
          // trigger scintillator
+         if (fCharm) {
+            LOG(ERROR) << "Scintillator hit found! There should not be any in the charmxsec measurement!"
+                       << FairLogger::endl;
+         }
+         continue;
          new ((*fRawScintillator)[nhitsScintillator])
             ScintillatorHit(detectorId, 0.098 * Float_t(hit_time), time_over_threshold, hit_flags, channel);
          nhitsScintillator++;
@@ -211,7 +225,7 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
       }
    }
 
-   uint16_t delay = 13500; // Best guess based on data
+   int32_t delay = 13500; // Best guess based on data
    if (!trigger_times[4]) {
       LOG(WARNING) << "No trigger in TDC 4, guessing delay" << FairLogger::endl;
       flags |= DriftTubes::NoDelay;
@@ -220,6 +234,8 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
       flags |= DriftTubes::NoDelay;
    } else {
       delay = trigger_times[4] - master_trigger_time;
+      LOG(DEBUG) << "Delay [ns]:";
+      LOG(DEBUG) << 0.098 * delay << " = " << 0.098 * trigger_times[4] << " - " << 0.098 * master_trigger_time;
    }
 
    for (auto &&hit : drifttube_hits) {
@@ -229,7 +245,7 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
       std::tie(channel, raw_time, time_over_threshold, first, hit_flags) = hit;
       hit_flags |= flags;
       auto id = *(reinterpret_cast<ChannelId *>(&channel));
-      auto detectorId = id.GetDetectorId();
+      auto detectorId = fCharm ? id.GetDetectorIdCharm() : id.GetDetectorId();
       auto TDC = id.TDC;
       Float_t time;
       try {
@@ -240,6 +256,11 @@ Bool_t DriftTubeUnpack::DoUnpack(Int_t *data, Int_t size)
                       << "\t Sequential trigger number " << df->header.timeExtent << FairLogger::endl;
          time = 0.098 * raw_time;
          hit_flags |= DriftTubes::NoTrigger;
+      }
+      if (time > 4000) {
+         LOG(WARNING) << "Late event found with time [ns]:";
+         LOG(WARNING) << time << " = " << 0.098 * delay << " - " << 0.098 * (delay + raw_time) - time << " - "
+                      << 0.098 * raw_time;
       }
 
       new ((*(first ? fRawTubes : fRawLateTubes))[first ? nhitsTubes : nhitsLateTubes])
