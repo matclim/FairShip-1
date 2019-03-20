@@ -1,61 +1,25 @@
-#include "ShipPixelHit.h"
-// #include "PixelDetector.h"
-#include "TVector3.h"
-#include "TGeoBBox.h"
-#include "TGeoNode.h"
-#include "TGeoManager.h"
-#include "TGeoShape.h"
-
+include "ShipPixelHit.h"
 #include <iostream>
-#include <cmath>
+using namespace std;
+ShipPixelHit::ShipPixelHit(Int_t detID, Float_t digi) : ShipHit(detID, digi) {}
 
-// -----   Standard constructor   ------------------------------------------
-ShipPixelHit::ShipPixelHit(Int_t detID,  Float_t digi)
-    : ShipHit(detID, digi), detectorID(detID), ToT(digi*25){}
+for(pixmod=0;pixmod <12;pixmod++){
+
+ShipPixelHit.Setpixelx(pixmod,0,0.0225)
+ShipPixelHit.Setpixelx(pixmod,167, 0.0225)
+ShipPixelHit.Setpixelx(pixmod,168, 2.1875)
+ShipPixelHit.Setpixelx(pixmod,335, 4.285)
+for(int i=1;i<168;i++){
+ShipPixelHit.Setpixelx(pixmod,i,0.045+(i-1)*0.025+0.0125);}
 
 
-HitID ShipPixelHit::GetPixel()
-{
-  int32_t partitionID, frontEndID, row, column;
-  HitID pixelID;
-  partitionID = fDetectorID/10000000;
-  frontEndID = (fDetectorID - partitionID*10000000)/1000000;
-  row = (fDetectorID - partitionID*10000000 - frontEndID*1000000)/1000;
-  column = (fDetectorID - partitionID*10000000 - frontEndID*1000000 - row*1000);
-  // stitch together 2 Front ends to one module
-  if ((frontEndID%2)==0) column += 80;
+for(int i=1;i<168;i++){
+ShipPixelHit.Setpixelx(pixmod,i,2.1875+(i-1)*0.025+0.0125);}
 
-  pixelID.partitionID = partitionID;
-  pixelID.frontEndID = frontEndID;
-  pixelID.moduleID = (partitionID*frontEndID)/2;
-  pixelID.row      = row;
-  pixelID.column   = column;
-
-  return pixelID;
+for(int i=1;i<161;i++){
+ShipPixelHit.Setpixely(pixmod.i,(i-1)*0.005+0.0025;)
 }
-
-int32_t ShipPixelHit::GetModule()
-{
-  HitID pixelID;
-  pixelID = GetPixel();
-  return pixelID.moduleID;
-}
-
-int32_t ShipPixelHit::GetDetectorID(){return fDetectorID; }
-
-<<<<<<< HEAD
-ShipPixelHit::Setpixelx(0, 0.0225)
-ShipPixelHit::Setpixelx(167, 0.0225)
-ShipPixelHit::Setpixelx(168, 0.0225)
-ShipPixelHit::Setpixelx(335, 0.0225)
-
-for(int i=1;i<=335;i++){
-if(i!=167 || i!=168){
-ShipPixelHit::Setpixelx(i,0.0125);}
 }
 
 
->>>>>>> parent of 98930e1... z position included
-
-
- ClassImp(ShipPixelHit)
+ClassImp(ShipPixelHit)
