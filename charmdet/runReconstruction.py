@@ -1,10 +1,14 @@
+
 import os,subprocess,ROOT,time,multiprocessing
-ncpus = multiprocessing.cpu_count()*3./4.
+import pwd
+ncpus = int(multiprocessing.cpu_count()*3./4.)
 
 pathToMacro = '' # $SHIPBUILD/FairShip/charmdet/
 def count_python_processes(macroName):
+ username = pwd.getpwuid(os.getuid()).pw_name
+ callstring = "ps -f -u " + username
 # only works if screen is wide enough to print full name!
- status = subprocess.check_output('ps -f -u truf',shell=True)
+ status = subprocess.check_output(callstring,shell=True)
  n=0
  for x in status.split('\n'):
    if not x.find(macroName)<0 and not x.find('python') <0: n+=1
@@ -183,12 +187,31 @@ def runMC():
 
 def checkFilesWithTracks(D='.'):
  fileList=[]
+ rest=[]
+ zombie=[]
  # all RT files
- for x in os.listdir(D):
-  if x.find('_RT')>0 and x.find('histos')<0: 
+ if D.find('eos')<0:
+  for x in os.listdir(D):
+   if x.find('_RT')>0 and x.find('histos')<0: 
     test = ROOT.TFile(D+'/'+x)
-    if test.cbmsim.GetBranch("FitTracks"): fileList.append(x)
+    if not test.GetKey('cbmsim'):
+       zombie.append(x)
+    elif test.cbmsim.GetBranch("FitTracks"): fileList.append(x)
+    else: rest.append(x)
+ else:
+  temp = subprocess.check_output("xrdfs "+os.environ['EOSSHIP']+" ls -l "+D,shell=True)
+  for x in temp.split('\n'):
+   if x.find('.root')<0: continue
+   fname =  x[x.find('/eos'):]
+   try: 
+    test=ROOT.TFile.Open(os.environ['EOSSHIP']+fname)
+    if not test.GetKey('cbmsim'):
+       zombie.append(fname)
+    elif test.cbmsim.GetBranch("FitTracks"): fileList.append(fname)
+    else: rest.append(fname)
+   except:zombie.append(fname)
  fileList.sort()
+ print "n with tracks",len(fileList),' rest:',len(rest),' zombies:',zombie
  return fileList
 
 def checkFilesWithTracks2(D='.'):
@@ -229,21 +252,22 @@ def checkFilesWithTracks3(D='.'):
 
 def cleanUp(D='.'):
 # remove raw data files for files with RT relations
-   for x in os.listdir(D):
-    if not x.find('_RT')<0 and x.find('histos')<0:
-     test = ROOT.TFile(D+'/'+x)
-     if test.cbmsim.GetBranch("FitTracks"): # it is safe to delete the local raw file
-        r = x.replace('_RT','')
-        cmd = 'rm '+r
-        os.system(cmd)
+   fok,fNotok,fRaw = checkFilesWithRT()
+   for x in fok:
+     r = x.replace('_RT','')
+     cmd = 'rm '+r
+     os.system(cmd)
 
-def copyMissingFiles(remote="../../ship-ubuntu-1710-64/RUN_8000_2395"):
+def copyMissingFiles(remote="../../ship-ubuntu-1710-64/RUN_8000_2395",exclude=[]):
  toCopy=[]
  allFilesR = os.listdir(remote)
  allFilesL = os.listdir(".")
  for fname in allFilesR:
-   if fname.find('RT')>0:
-     if not fname in allFilesL: toCopy.append(fname)
+   if not fname.find('histos')<0: continue
+   if fname.find('RT')<0: continue
+   if fname in exclude: continue
+   if not fname in allFilesL: toCopy.append(fname)
+ print "len",len(toCopy)
  for fname in toCopy: os.system('cp '+remote+"/"+fname+' .')
 
 def importRTFiles(local='.',remote='/home/truf/ship-ubuntu-1710-32/home/truf/muflux/Jan08'):
@@ -261,12 +285,23 @@ def importRecoFiles(local='.',remote='/media/truf/disk2/home/truf/ShipSoft/ship-
 
 def mergeHistos(local='.',case='residuals'):
  allFiles = os.listdir(local)
- if case == 'residuals':  cmd = 'hadd -f residuals.root '
- else:  cmd = 'hadd -f momDistributions.root '
+ if case == 'residuals':  
+     dest = 'residuals.root'
+     tag = 'histos-residuals'
+ else:  
+     dest = 'momDistributions.root'
+     tag = 'histos-analysis'
+ cmd = "hadd -f "+dest+' '
+ N=0
  for x in allFiles:
-  if not x.find('histos')<0 : 
-   if (case == 'residuals' and  x.find('analysis')<0) or  \
-      (case != 'residuals' and not x.find('analysis')<0 ):   cmd += (local+'/'+x+' ')
+  if not x.find(tag)<0 : 
+     cmd += (local+'/'+x+' ')
+     N+=1
+  if N>500:
+    os.system(cmd)
+    os.system('cp '+dest+' tmp.root')
+    cmd = "hadd -f "+dest+' tmp.root '
+    N=0
  os.system(cmd)
 
 def checkRecoRun(eosLocation=eospath,local='.'):
@@ -291,13 +326,32 @@ def exportRunToEos(eosLocation="/eos/experiment/ship/user/truf/muflux-reco",run=
   if rc != 0: failures.append(x)
  if len(failures)!=0: print failures
 
-def makeMomDistributions():
- fileList = checkFilesWithTracks(D='.')
+def makeMomDistributions(run=0):
+ if run==0: fileList = checkFilesWithTracks(D='.')
+ else:
+  eospathReco = '/eos/experiment/ship/user/odurhan/muflux-recodata/'+run
+  fileList = []
+  temp = subprocess.check_output("xrdfs "+os.environ['EOSSHIP']+" ls -l "+eospathReco,shell=True)
+  for x in temp.split('\n'):
+   if x.find('.root')<0: continue
+   fileList.append( os.environ['EOSSHIP'] + x[x.find('/eos'):])
  # all RT files with tracks
  for fname in fileList:
-    if os.path.isfile('histos-analysis-'+fname): continue
+    if os.path.isfile('histos-analysis-'+fname[fname.rfind('/')+1:]): continue
     cmd = "python "+pathToMacro+"drifttubeMonitoring.py -c anaResiduals -f "+fname+' &'
     print 'momentum analysis:', cmd
+    os.system(cmd)
+    time.sleep(10)
+    while 1>0:
+        if count_python_processes('drifttubeMonitoring')<ncpus: break 
+        time.sleep(10)
+ print "finished all the tasks."
+
+def redoMuonTracks():
+ fileList = checkFilesWithTracks(D='.')
+ for fname in fileList:
+    cmd = "python "+pathToMacro+"drifttubeMonitoring.py -c  recoMuonTaggerTracks -u 1 -f "+fname+' &'
+    print 'redo muonTracks:', cmd
     os.system(cmd)
     time.sleep(10)
     while 1>0:
@@ -315,10 +369,10 @@ def pot():
  scalerStat = {}
  for fname in fileList:
    f=ROOT.TFile(fname)
-   scalers = f.scalers
-   if not scalers:
+   if not f.FindKey("scalers"):
      print "no scalers in this file",fname
      continue
+   scalers = f.scalers
    scalers.GetEntry(0)
    for x in scalers.GetListOfBranches():
     name = x.GetName()
