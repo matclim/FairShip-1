@@ -58,3 +58,5 @@ lcgenv.sh
 
 #Files
 macro/mateiresults
+macro/run_simScript.py
+muonShieldOptimization/run_MufluxfixedTarget.py
