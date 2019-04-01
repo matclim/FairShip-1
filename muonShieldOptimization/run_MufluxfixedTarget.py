@@ -20,7 +20,7 @@ chibb = 1.6e-7
 npot  = 5E13
 nStart = 0
 
-charmInputFile = "root://eoslhcb.cern.ch//eos/ship/data/Charm/Cascade-parp16-MSTP82-1-MSEL4-76Mpot_1.root"
+charmInputFile = "/cephfs/user/s6maclim/CharmCascade/Cascade-parp16-MSTP82-1-MSEL4-76Mpot_1.root"
 nStart = 0
 
 outputDir    = "."
