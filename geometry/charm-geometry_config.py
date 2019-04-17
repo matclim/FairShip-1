@@ -339,9 +339,13 @@ with ConfigRegistry.register_config("basic") as c:
     c.PixelModules.ySi = []
     c.PixelModules.zSi = []
     #Module 0
+    c.PixelModules.zSi.append(-0.13)
     c.PixelModules.xSi.append(1.53912)
     c.PixelModules.ySi.append(-0.002332)
-    c.PixelModules.zSi.append(-0.13)
+  #  for i in range(-5,5):
+  #  	c.PixelModules.xSi.append(1.53912)
+ # 	c.PixelModules.ySi.append(-0.002332)
+ # 	c.PixelModules.zSi.append(-0.13+c.PixelModules.DimZSi/10*(i+0.5))
     #Module 1
     c.PixelModules.xSi.append(-0.229076)
     c.PixelModules.ySi.append(0.005328)

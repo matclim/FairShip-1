@@ -226,8 +226,10 @@ Bool_t  PixelModules::ProcessHits(FairVolume* vol)
         gMC->TrackMomentum(fMom);
     }
     // Sum energy loss for all steps in the active volume
+
     fELoss += gMC->Edep();
-    
+    stepEdep.push_back(gMC->Edep());
+
     // Create muonPoint at exit of active volume
     if ( gMC->IsTrackExiting()    ||
         gMC->IsTrackStop()       ||
@@ -246,7 +248,7 @@ Bool_t  PixelModules::ProcessHits(FairVolume* vol)
         Double_t ymean = (fPos.Y()+Pos.Y())/2. ;      
         Double_t zmean = (fPos.Z()+Pos.Z())/2. ;     
 
-	AddHit(fTrackID, fVolumeID, TVector3(xmean, ymean,  zmean), TVector3(fMom.Px(), fMom.Py(), fMom.Pz()), fTime, fLength,fELoss, pdgCode);
+	AddHit(fTrackID, fVolumeID, TVector3(xmean, ymean,  zmean), TVector3(fMom.Px(), fMom.Py(), fMom.Pz()), fTime, fLength,fELoss, pdgCode, stepEdep);
         
         // Increment number of muon det points in TParticle
         ShipStack* stack = (ShipStack*) gMC->GetStack();
@@ -297,13 +299,13 @@ void PixelModules::Reset()
 PixelModulesPoint* PixelModules::AddHit(Int_t trackID, Int_t detID,
                         TVector3 pos, TVector3 mom,
                         Double_t time, Double_t length,
-					    Double_t eLoss, Int_t pdgCode)
+					    Double_t eLoss, Int_t pdgCode, std::vector<Double_t> stepEdep)
 
 {
     TClonesArray& clref = *fPixelModulesPointCollection;
     Int_t size = clref.GetEntriesFast();
 
-    return new(clref[size]) PixelModulesPoint(trackID, detID, pos, mom,time, length, eLoss, pdgCode);
+    return new(clref[size]) PixelModulesPoint(trackID, detID, pos, mom,time, length, eLoss, pdgCode, stepEdep);
 }
 
 

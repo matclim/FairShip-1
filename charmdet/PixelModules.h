@@ -11,6 +11,8 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 
+using std::vector;
+
 class PixelModulesPoint;
 class FairVolume;
 class TClonesArray;
@@ -53,7 +55,7 @@ class PixelModules:public FairDetector
     PixelModulesPoint* AddHit(Int_t trackID, Int_t detID,
                          TVector3 pos, TVector3 mom,
                          Double_t time, Double_t length,
-                         Double_t eLoss, Int_t pdgCode);
+                         Double_t eLoss, Int_t pdgCode, std::vector<Double_t> stepEdep);
 
     /** The following methods can be implemented if you need to make
      *  any optional action in your detector during the transport.
@@ -85,7 +87,8 @@ private:
     Double32_t     fTime;              //!  time
     Double32_t     fLength;            //!  length
     Double32_t     fELoss;             //!  energy loss
-    
+    Int_t	   nsteps;    
+    std::vector<Double_t> stepEdep;
     /** container for data points */
     TClonesArray*  fPixelModulesPointCollection;
     

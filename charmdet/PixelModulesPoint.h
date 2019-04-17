@@ -7,6 +7,8 @@
 #include "TObject.h"
 #include "TVector3.h"
 
+using std::vector;
+
 class PixelModulesPoint:public FairMCPoint
 {
 
@@ -28,7 +30,7 @@ class PixelModulesPoint:public FairMCPoint
     
 
     PixelModulesPoint(Int_t trackID, Int_t detID, TVector3 pos, TVector3 mom,
-                     Double_t tof, Double_t length, Double_t eLoss, Int_t pdgcode);
+                     Double_t tof, Double_t length, Double_t eLoss, Int_t pdgcode, std::vector<Double_t> stepEdep);
 
 
     /** Destructor **/
@@ -47,7 +49,7 @@ class PixelModulesPoint:public FairMCPoint
     
     PixelModulesPoint(const PixelModulesPoint& point);
     PixelModulesPoint operator=(const PixelModulesPoint& point);
-
+    std::vector<Double_t> stepEdep;
     ClassDef(PixelModulesPoint,1)
 
 };
