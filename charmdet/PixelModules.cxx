@@ -42,9 +42,11 @@
 #include "TGeoUniformMagField.h"
 #include <stddef.h>                     // for NULL
 #include <iostream>                     // for operator<<, basic_ostream, etc
+#include <vector>
 
 using std::cout;
 using std::endl;
+using std::vector;
 using namespace ShipUnit;
 
 PixelModules::PixelModules()

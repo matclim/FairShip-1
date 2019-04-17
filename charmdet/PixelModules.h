@@ -10,7 +10,7 @@
 
 #include "TVector3.h"
 #include "TLorentzVector.h"
-
+#include "vector"
 using std::vector;
 
 class PixelModulesPoint;
