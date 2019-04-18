@@ -59,7 +59,8 @@ PixelModules::PixelModules()
     fTime(-1.),
     fLength(-1.),
     fELoss(-1),
-    fPixelModulesPointCollection(new TClonesArray("PixelModulesPoint"))
+    fPixelModulesPointCollection(new TClonesArray("PixelModulesPoint")),
+    fstepEdep()
 {
 }
 
@@ -73,7 +74,8 @@ PixelModules::PixelModules(const char* name, const Double_t DX, const Double_t D
     fTime(-1.),
     fLength(-1.),
     fELoss(-1),
-    fPixelModulesPointCollection(new TClonesArray("PixelModulesPoint"))
+    fPixelModulesPointCollection(new TClonesArray("PixelModulesPoint")),
+    fstepEdep()
 { 
   DimX = DX;
   DimY = DY;
@@ -228,9 +230,8 @@ Bool_t  PixelModules::ProcessHits(FairVolume* vol)
         gMC->TrackMomentum(fMom);
     }
     // Sum energy loss for all steps in the active volume
-
+    Double_t stepEdep=gMC->Edep();
     fELoss += gMC->Edep();
-    stepEdep.push_back(gMC->Edep());
 
     // Create muonPoint at exit of active volume
     if ( gMC->IsTrackExiting()    ||
@@ -301,7 +302,7 @@ void PixelModules::Reset()
 PixelModulesPoint* PixelModules::AddHit(Int_t trackID, Int_t detID,
                         TVector3 pos, TVector3 mom,
                         Double_t time, Double_t length,
-					    Double_t eLoss, Int_t pdgCode, std::vector<Double_t> stepEdep)
+					    Double_t eLoss, Int_t pdgCode, Double_t stepEdep)
 
 {
     TClonesArray& clref = *fPixelModulesPointCollection;

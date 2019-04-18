@@ -30,7 +30,7 @@ class PixelModulesPoint:public FairMCPoint
     
 
     PixelModulesPoint(Int_t trackID, Int_t detID, TVector3 pos, TVector3 mom,
-                     Double_t tof, Double_t length, Double_t eLoss, Int_t pdgcode, std::vector<Double_t> stepEdep);
+                     Double_t tof, Double_t length, Double_t eLoss, Int_t pdgcode, Double_t stepEdep);
 
 
     /** Destructor **/
@@ -44,12 +44,12 @@ class PixelModulesPoint:public FairMCPoint
   private:
     
     Int_t fPdgCode;
+    Double_t fstepEdep;
     
     /** Copy constructor **/
     
     PixelModulesPoint(const PixelModulesPoint& point);
     PixelModulesPoint operator=(const PixelModulesPoint& point);
-    std::vector<Double_t> stepEdep;
     ClassDef(PixelModulesPoint,1)
 
 };

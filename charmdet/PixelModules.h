@@ -23,7 +23,7 @@ class PixelModules:public FairDetector
   PixelModules(const char* name, const Double_t DX, const Double_t DY, const Double_t DZ,Bool_t Active, const char* Title="PixelModules");
     PixelModules();
     virtual ~PixelModules();
-      
+    
     void ConstructGeometry();
     void SetZsize(const Double_t MSsize);
     void SetBoxParam(Double_t SX, Double_t SY, Double_t SZ, Double_t zBox,Double_t SZPixel, Double_t Dim1Short, Double_t Dim1Long);
@@ -55,7 +55,7 @@ class PixelModules:public FairDetector
     PixelModulesPoint* AddHit(Int_t trackID, Int_t detID,
                          TVector3 pos, TVector3 mom,
                          Double_t time, Double_t length,
-                         Double_t eLoss, Int_t pdgCode, std::vector<Double_t> stepEdep);
+                         Double_t eLoss, Int_t pdgCode, Double_t stepEdep);
 
     /** The following methods can be implemented if you need to make
      *  any optional action in your detector during the transport.
@@ -73,6 +73,8 @@ class PixelModules:public FairDetector
     virtual void   BeginEvent() {;}
 
     void DecodeVolumeID(Int_t detID,int &nHPT);
+
+    Double_t stepEdep(){return fstepEdep;};
     
 private:
     
@@ -88,7 +90,7 @@ private:
     Double32_t     fLength;            //!  length
     Double32_t     fELoss;             //!  energy loss
     Int_t	   nsteps;    
-    std::vector<Double_t> stepEdep;
+    Double_t	   fstepEdep;
     /** container for data points */
     TClonesArray*  fPixelModulesPointCollection;
     

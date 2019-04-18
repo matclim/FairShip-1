@@ -17,8 +17,8 @@ PixelModulesPoint::PixelModulesPoint()
 PixelModulesPoint::PixelModulesPoint(Int_t trackID, Int_t detID,
                                    TVector3 pos, TVector3 mom,
                                    Double_t tof, Double_t length,
-			   Double_t eLoss, Int_t pdgcode, std::vector<Double_t> stepEdep)
-  : FairMCPoint(trackID, detID, pos, mom, tof, length, eLoss), fPdgCode(pdgcode)
+			   Double_t eLoss, Int_t pdgcode, Double_t stepEdep)
+  : FairMCPoint(trackID, detID, pos, mom, tof, length, eLoss), fPdgCode(pdgcode),fstepEdep(stepEdep)
 {
 }
 
