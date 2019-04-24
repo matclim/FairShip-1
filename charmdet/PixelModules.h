@@ -115,7 +115,7 @@ protected:
     Double_t overlap;
     Double_t DimZPixelBox;
 
-    static const Int_t nSi=21;
+    Int_t nSi;
     Double_t DimZSi;
 
     //since I do not know yet how much stations will be used, I need to allocate a lot of space

@@ -143,6 +143,11 @@ void PixelModules::SetSiliconStationAngles(Int_t nstation, Double_t anglex, Doub
  zangle[nstation] = anglez;
 }
 
+void PixelModules::SetSiliconDetNumber(Int_t nSilicon)
+{
+ nSi = nSilicon;
+}
+
 
 
 
