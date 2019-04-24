@@ -387,7 +387,7 @@ with ConfigRegistry.register_config("basic") as c:
     c.PixelModules.ySi.append(-0.79636)
     c.PixelModules.zSi.append(13.85)
 
-    c.npixelstations = len(c.PixelModules.zSi)
+    c.PixelModules.nPixelStations = len(c.PixelModules.zSi)
 
     #SciFi Modules
     c.SciFi = AttrDict(z = 0*u.cm)
@@ -452,9 +452,9 @@ with ConfigRegistry.register_config("basic") as c:
     #c.Scintillator.DistT2              = 135.25*u.cm
     c.Scintillator.DistT2              = 136.26*u.cm 
                   
-    c.Spectrometer.SZ = c.Spectrometer.DZ*2 + c.PixelModules.zSi[npixelstations-1] - c.PixelModules.zSi[0] + c.PixelModules.DimZSi + 80 *u.cm + 4.5*u.m #4.5 m is the Goliath length
+    c.Spectrometer.SZ = c.Spectrometer.DZ*2 + c.PixelModules.zSi[ c.PixelModules.nPixelStations-1] - c.PixelModules.zSi[0] + c.PixelModules.DimZSi + 80 *u.cm + 4.5*u.m #4.5 m is the Goliath length
    
-    c.PixelModules.DimZpixelbox = c.PixelModules.zSi[npixelstations-1] - c.PixelModules.zSi[0] + c.PixelModules.DimZSi    
+    c.PixelModules.DimZpixelbox = c.PixelModules.zSi[c.PixelModules.nPixelStations-1] - c.PixelModules.zSi[0] + c.PixelModules.DimZSi    
 
     PixeltoGoliath = 30.45 *u.cm #25.45 + 5cm different goliath dz
     c.Spectrometer.zBox = 350.75 - c.Spectrometer.TS/2 - PixeltoGoliath - c.PixelModules.DimZpixelbox/2.
