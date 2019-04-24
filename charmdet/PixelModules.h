@@ -118,8 +118,10 @@ protected:
     static const Int_t nSi=21;
     Double_t DimZSi;
 
-    Double_t xs[nSi], ys[nSi], zs[nSi];
-    Double_t xangle[nSi], yangle[nSi], zangle[nSi];
+    //since I do not know yet how much stations will be used, I need to allocate a lot of space
+    static const Int_t nsiMaximum = 100;
+    Double_t xs[nsiMaximum], ys[nsiMaximum], zs[nsiMaximum];
+    Double_t xangle[nsiMaximum], yangle[nsiMaximum], zangle[nsiMaximum];
     
     PixelModules(const PixelModules&);
     PixelModules& operator=(const PixelModules&);
