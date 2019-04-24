@@ -203,11 +203,11 @@ void PixelModules::ConstructGeometry()
     AddSensitiveVolume(volPixelx);
 
     //id convention: 1{a}{b}, a = number of pair (from 1 to 6), b = element of the pair (1 or 2)
-    Int_t PixelIDlist[12] = {111,112,121,122,131,132,141,142,151,152,161,162}; 
+    Int_t PixelIDlist[nSi] = {111,112,121,122,131,132,141,142,151,152,161,162}; 
     //Alternated pixel stations optimized for y and x measurements
-    Bool_t vertical[12] = {kTRUE,kTRUE,kFALSE,kFALSE,kTRUE,kTRUE,kFALSE,kFALSE,kTRUE,kTRUE,kFALSE,kFALSE}; 
+    Bool_t vertical[nSi] = {kTRUE,kTRUE,kFALSE,kFALSE,kTRUE,kTRUE,kFALSE,kFALSE,kTRUE,kTRUE,kFALSE,kFALSE}; 
 
-    for (int ipixel = 0; ipixel < 12; ipixel++){
+    for (int ipixel = 0; ipixel < nSi; ipixel++){
       if (vertical[ipixel]) volPixelBox->AddNode(volPixely, PixelIDlist[ipixel], new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset)); //compensation for the Node offset
       else volPixelBox->AddNode(volPixelx, PixelIDlist[ipixel], new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset));
     }
