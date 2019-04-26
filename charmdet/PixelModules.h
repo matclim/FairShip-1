@@ -121,6 +121,9 @@ protected:
     Double_t DimZSlice;
     Double_t xs[nSi], ys[nSi], zs[nSi];
     Double_t xangle[nSi], yangle[nSi], zangle[nSi];
+    Int_t nSi;
+    Double_t DimZSi;
+
     
     PixelModules(const PixelModules&);
     PixelModules& operator=(const PixelModules&);
