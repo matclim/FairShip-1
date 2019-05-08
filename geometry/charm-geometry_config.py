@@ -467,7 +467,7 @@ with ConfigRegistry.register_config("basic") as c:
                   
     c.Spectrometer.SZ = c.Spectrometer.DZ*2 + c.PixelModules.zSi[c.PixelModules.numSi-1] - c.PixelModules.zSi[c.PixelModules.nSlice-1] + c.PixelModules.DimZSithick + 80 *u.cm + 4.5*u.m #4.5 m is the Goliath length
    
-    c.PixelModules.DimZpixelbox = c.PixelModules.zSi[c.PixelModules.numSi-1] - c.PixelModules.zSi[c.PixelModules.nSlice-1] + c.PixelModules.DimZSithick   
+    c.PixelModules.DimZpixelbox = c.PixelModules.zSi[c.PixelModules.numSi-1] - c.PixelModules.zSi[c.PixelModules.nSlice-1] + 2*c.PixelModules.DimZSithick   
 
     PixeltoGoliath = 30.45 *u.cm #25.45 + 5cm different goliath dz
     c.Spectrometer.zBox = 350.75 - c.Spectrometer.TS/2 - PixeltoGoliath - c.PixelModules.DimZpixelbox/2.
