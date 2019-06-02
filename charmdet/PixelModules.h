@@ -111,9 +111,12 @@ protected:
     Double_t DimX =0;
     Double_t DimY =0;
     Double_t DimZ = 0;
+    Double_t DimZCu = 0.001;
+    Double_t DimZKa = 0.0005;
+    Double_t DimZFE = 0.0015;
+
     Double_t zSizeMS = 0; //dimension of the Magnetic PixelModules volume
-    Double_t DimZAlu= 0.6; //thickness of the aluminium modules
-    Double_t DimZWindow=0.005;
+    Double_t DimZWindow=0.011;
     Double_t Windowx=5;
     Double_t Windowy=5;//estimation has to be measured
 

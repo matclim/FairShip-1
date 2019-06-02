@@ -164,8 +164,11 @@ void PixelModules::ConstructGeometry()
   TGeoMedium *air = gGeoManager->GetMedium("air");
 
     InitMedium("iron");
-    TGeoMedium *Fe =gGeoManager->GetMedium("iron");
-    
+    TGeoMedium *Fepton =gGeoManager->GetMedium("iron");
+   
+    InitMedium("kapton");
+    TGeoMedium *kapton =gGeoManager->GetMedium("kapton");
+ 
     InitMedium("silicon");
     TGeoMedium *Silicon = gGeoManager->GetMedium("silicon");
 
@@ -174,6 +177,9 @@ void PixelModules::ConstructGeometry()
 
     InitMedium("CoilCopper");
     TGeoMedium *Cu  = gGeoManager->GetMedium("CoilCopper");
+
+    InitMedium("copper");
+    TGeoMedium *copper  = gGeoManager->GetMedium("copper");
 
     InitMedium("CoilAluminium");
     TGeoMedium *Al  = gGeoManager->GetMedium("CoilAluminium");
@@ -221,20 +227,35 @@ void PixelModules::ConstructGeometry()
   ///////////////////////////////////////////////////////Passive material///////////////////////////////////////////////////////
    
     TGeoBBox *WindowBox = new TGeoBBox("WindowBox",Windowx/2, Windowy/2,DimZWindow/2);
-    TGeoVolume *volWindow = new TGeoVolume("volWindow",WindowBox,Al);
+    TGeoVolume *volWindow = new TGeoVolume("volWindow",WindowBox,kapton);
     volWindow->SetLineColor(kGray);
     //AddSensitiveVolume(volWindow);
 
-    TGeoBBox *PixelFramesx = new TGeoBBox("PixelFramesx",Dim1Short/2,Dim1Long/2, DimZAlu/2);
-    TGeoVolume *volAluFramex = new TGeoVolume("volAluFramex",PixelFramesx,Aluminium);
-    volAluFramex->SetLineColor(kGray);
-   // AddSensitiveVolume(volAluFramex);
+    TGeoBBox *FrontEndSilix = new TGeoBBox("FrontEndSilix",Dim1Short/2,Dim1Long/2, DimZFE/2);
+    TGeoVolume *VolSiliFEx = new TGeoVolume("VolSiliFEx",FrontEndSilix,Silicon);
+    VolSiliFEx->SetLineColor(kGray);
+   // AddSensitiveVolume(VolSiliFEx);
 
-    TGeoBBox *PixelFramesy = new TGeoBBox("PixelFramesy",Dim1Short/2,Dim1Long/2, DimZAlu/2);
-    TGeoVolume *volAluFramey = new TGeoVolume("volAluFramey",PixelFramesy,Aluminium);
-    volAluFramey->SetLineColor(kGray);
-    //AddSensitiveVolume(volAluFramey);
+    TGeoBBox *FrontEndSiliy = new TGeoBBox("FrontEndSiliy",Dim1Short/2,Dim1Long/2, DimZFE/2);
+    TGeoVolume *VolSiliFEy = new TGeoVolume("VolSiliFEy",FrontEndSiliy,Silicon);
+    VolSiliFEy->SetLineColor(kGray);
+    //AddSensitiveVolume(VolSiliFEy);
+  
+    TGeoBBox *ModuleCopperx = new TGeoBBox("ModuleCopperx",Dim1Short/2,Dim1Long/2, DimZCu/2);
+    TGeoVolume *VolModCux = new TGeoVolume("VolModCux",ModuleCopperx,copper);
+    VolModCux->SetLineColor(kGray);
 
+    TGeoBBox *ModuleCoppery = new TGeoBBox("ModuleCoppery",Dim1Short/2,Dim1Long/2, DimZCu/2);
+    TGeoVolume *VolModCuy = new TGeoVolume("VolModCuy",ModuleCoppery,copper);
+    VolModCux->SetLineColor(kGray);
+   
+    TGeoBBox *ModuleKaptonx = new TGeoBBox("ModuleKaptonx",Dim1Short/2,Dim1Long/2, DimZKa/2);
+    TGeoVolume *VolModKax = new TGeoVolume("VolModKax",ModuleKaptonx,kapton);
+    VolModKax->SetLineColor(kGray);
+
+    TGeoBBox *ModuleKaptony = new TGeoBBox("ModuleKaptony",Dim1Short/2,Dim1Long/2, DimZKa/2);
+    TGeoVolume *VolModKay = new TGeoVolume("VolModKay",ModuleKaptony,kapton);
+    VolModKay->SetLineColor(kGray);
 ////////////////////////////////////////////////////////End passive material////////////////////////////////////////////////////////////////
 
     //id convention: 1{a}{b}{c}, a = number of pair (from 1 to 6), b = element of the pair (1 or 2)
@@ -286,7 +307,7 @@ void PixelModules::ConstructGeometry()
 			}
 		else volPixelBox->AddNode(volPixelythick, 9000, new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset)); //else here used for debugging, if the number of slices isn't 10
 
-		if((ipixel+nSlices)%9==1) volAluFramex->AddNode(volAluFramex, 0,new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset+DimZThickSlice));
+		if((ipixel+nSlices)%9==1) VolSiliFEx->AddNode(VolSiliFEx, 0,new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset+DimZThickSlice));
 		}
       else{ 
 		if(PixelIDlist[ipixel]) 
@@ -296,7 +317,7 @@ void PixelModules::ConstructGeometry()
 		else volPixelBox->AddNode(volPixelxthick, 9000, new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset)); //debugging else for if nSlice!=10
 
 
-		if((ipixel+nSlices)%9==1)volAluFramey->AddNode(volAluFramey, 0,new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset+DimZThickSlice));
+		if((ipixel+nSlices)%9==1)VolSiliFEy->AddNode(VolSiliFEy, 0,new TGeoTranslation(xs[ipixel],ys[ipixel],-DimZPixelBox/2.+ zs[ipixel]-inimodZoffset+DimZThickSlice));
 		}
 	
 	}
