@@ -100,8 +100,15 @@ splitcalHit::splitcalHit(splitcalPoint* p, Double_t t0)
   // TGeoNode* check = navigator->FindNode(pointX,pointY,pointZ);
 
   SetEnergy(pointE);
-  if (isPrec==1) SetXYZ(pointX,pointY,stripCoordinatesMaster[2]);
-  else  SetXYZ(stripCoordinatesMaster[0], stripCoordinatesMaster[1], stripCoordinatesMaster[2]);
+  if (isPrec==1) {
+    // segmentation for high precision layers  not in the geometry because too preliminary 
+    int nx = ceil(pointX/_hpCellX);
+    int ny = ceil(pointY/_hpCellY);
+    double hpDigiX = (nx-0.5)*_hpCellX; 
+    double hpDigiY = (ny-0.5)*_hpCellY; 
+    SetXYZ(hpDigiX,hpDigiY,stripCoordinatesMaster[2]);
+    // SetXYZ(pointX,pointY,stripCoordinatesMaster[2]);
+  } else  SetXYZ(stripCoordinatesMaster[0], stripCoordinatesMaster[1], stripCoordinatesMaster[2]);
   SetXYZErrors(xHalfLength,yHalfLength,2*(zHalfLength+zPassiveHalfLength));
   
 

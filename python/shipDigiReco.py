@@ -244,19 +244,47 @@ class ShipDigiReco:
 
  def digitizeSplitcal(self):  
    listOfDetID = {} # the idea is to keep only one hit for each cell/strip and if more points fall in the same cell/strip just sum up the energy
+   listHighPrecisionHits = []
    index = 0
    for aMCPoint in self.sTree.splitcalPoint:
      aHit = ROOT.splitcalHit(aMCPoint,self.sTree.t0)
      detID = aHit.GetDetectorID()
-     if detID not in listOfDetID:
-       if self.digiSplitcal.GetSize() == index: 
-         self.digiSplitcal.Expand(index+1000)
-       listOfDetID[detID] = index
-       self.digiSplitcal[index]=aHit
-       index+=1
-     else:
-       indexOfExistingHit = listOfDetID[detID]
-       self.digiSplitcal[indexOfExistingHit].UpdateEnergy(aHit.GetEnergy())
+     if not aHit.GetIsPrecisionLayer(): #different treatment for high precisin layers (geometry less advanced/defined) 
+       if detID not in listOfDetID:
+         if self.digiSplitcal.GetSize() == index: 
+           self.digiSplitcal.Expand(index+1000)
+         listOfDetID[detID] = index
+         self.digiSplitcal[index]=aHit
+         index+=1
+       else:
+         indexOfExistingHit = listOfDetID[detID]
+         self.digiSplitcal[indexOfExistingHit].UpdateEnergy(aHit.GetEnergy())
+     else: #high precision layers
+       aHit.SetHighPrecisionCellSize(0.1,0.1) #cm
+       hit1_nL = aHit.GetLayerNumber()
+       hit1_x = aHit.GetX()
+       hit1_y = aHit.GetY()
+       if len(listHighPrecisionHits)==0:
+         listHighPrecisionHits.append(aHit)
+         continue
+       else:
+         sameCoord = False 
+         for hit2 in listHighPrecisionHits:
+           hit2_nL = hit2.GetLayerNumber()
+           hit2_x =  hit2.GetX()
+           hit2_y =  hit2.GetY()
+           if hit1_nL == hit2_nL and hit1_x == hit2_x and hit1_y == hit2_y:
+             hit2.UpdateEnergy(aHit.GetEnergy())
+             break
+         if not sameCoord:
+           listHighPrecisionHits.append(aHit)
+   
+   for hpHit in listHighPrecisionHits:
+     if self.digiSplitcal.GetSize() == index: 
+       self.digiSplitcal.Expand(index+1000)
+     self.digiSplitcal[index]=hpHit
+     index+=1
+     
    self.digiSplitcal.Compress() #remove empty slots from array
 
    ##########################    
