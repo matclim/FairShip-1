@@ -1,4 +1,5 @@
 #!/usr/bin/env python 
+from __future__ import print_function
 import ROOT,os,sys,getopt,time,shipRoot_conf
 import shipunit as u
 from ShipGeoConfig import ConfigRegistry
@@ -67,6 +68,7 @@ def init():
   ap.add_argument('-d', '--debug', action='store_true', dest='debug')
   ap.add_argument('-f', '--force', action='store_true', help="force overwriting output directory")
   ap.add_argument('-cs', '--CharmdetSetup', type=int, dest='CharmdetSetup',help="setting detector setup", default=0)
+  ap.add_argument('-ct', '--CharmTarget', type=int, dest='CharmTarget',help="choosing target configuration for charm exposure", default=3)
   ap.add_argument('-r', '--run-number', type=int, dest='runnr', default=runnr)
   ap.add_argument('-e', '--ecut', type=float, help="energy cut", dest='ecut', default=ecut)
   ap.add_argument('-n', '--num-events', type=int, help="number of events to generate", dest='nev', default=nev)
@@ -148,7 +150,7 @@ os.chdir(work_dir)
 ROOT.gRandom.SetSeed(theSeed)  # this should be propagated via ROOT to Pythia8 and Geant4VMC
 shipRoot_conf.configure()      # load basic libraries, prepare atexit for python
 #this is for the muon flux geometry
-ship_geo = ConfigRegistry.loadpy("$FAIRSHIP/geometry/charm-geometry_config.py", Setup = args.CharmdetSetup)
+ship_geo = ConfigRegistry.loadpy("$FAIRSHIP/geometry/charm-geometry_config.py", Setup = args.CharmdetSetup, cTarget = args.CharmTarget)
 
 txt = 'pythia8_Geant4_'
 if withEvtGen: txt = 'pythia8_evtgen_Geant4_'
@@ -234,10 +236,10 @@ run.Run(nev)
 timer.Stop()
 rtime = timer.RealTime()
 ctime = timer.CpuTime()
-print ' ' 
-print "Macro finished succesfully." 
-print "Output file is ",  outFile 
-print "Real time ",rtime, " s, CPU time ",ctime,"s"
+print(' ') 
+print("Macro finished succesfully.") 
+print("Output file is ",  outFile) 
+print("Real time ",rtime, " s, CPU time ",ctime,"s")
 
 if (ship_geo.MufluxSpectrometer.muflux==True):
 # ---post processing--- remove empty events --- save histograms
@@ -252,7 +254,7 @@ if (ship_geo.MufluxSpectrometer.muflux==True):
   fHeader.SetTitle("POT equivalent = %7.3G"%(poteq))
  else: 
   fHeader.SetTitle("POT = "+str(nev))
- print "Data generated ", fHeader.GetTitle()
+ print("Data generated ", fHeader.GetTitle())
  t     = fin.cbmsim
  fout  = ROOT.TFile(tmpFile,'recreate' )
  sTree = t.CloneTree(0)
@@ -276,10 +278,10 @@ if (ship_geo.MufluxSpectrometer.muflux==True):
  fout.Close()
  os.system("mv "+tmpFile+" "+outFile)
 
- print "Number of events produced with activity after hadron absorber:",nEvents 
+ print("Number of events produced with activity after hadron absorber:",nEvents) 
 
 else:
- print "No post processing done"
+ print("No post processing done")
 
 sGeo = ROOT.gGeoManager
 run.CreateGeometryFile("%s/geofile_full.root" % (outputDir))

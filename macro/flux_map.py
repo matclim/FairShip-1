@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from __future__ import division
 import argparse
 import numpy as np
 import ROOT as r
@@ -6,6 +7,7 @@ import ROOT as r
 r.PyConfig.IgnoreCommandLineOptions = True
 import shipunit as u
 import rootUtils as ut
+import logger as log
 
 
 def main():
@@ -28,6 +30,15 @@ def main():
     h = {}
 
     # Define histograms
+    for nplane in range(0, 23):
+        ut.bookHist(h, 'NuTauMu_all_{}'.format(nplane),
+                    'Rpc_{};x[cm];y[cm]'.format(
+                        nplane), 100, -300, +300, 100, -300,
+                    300)
+        ut.bookHist(h, 'NuTauMu_mu_{}'.format(nplane),
+                    'Rpc_{};x[cm];y[cm]'.format(
+                        nplane), 100, -300, +300, 100, -300,
+                    300)
     for suffix, title in [('mu', '#mu#pm hits'), ('all', 'All hits')]:
         ut.bookHist(h, 'muon_tiles_{}'.format(suffix),
                     '{};x[cm];y[cm]'.format(title), 200, -1000, +1000, 90,
@@ -41,8 +52,27 @@ def main():
         ut.bookHist(h, 'timing_{}'.format(suffix),
                     '{};x[cm];y[cm]'.format(title), 3, -252, +252, 167, -501,
                     501)
+        ut.bookHist(h, 'TargetTracker_{}'.format(suffix),
+                    '{};x[cm];y[cm]'.format(title), 120, -60, 60, 120, -60,
+                    60)
+        ut.bookHist(h, 'TargetTracker_yvsz_{}'.format(suffix),
+                    '{};z[cm];y[cm]'.format(
+                        title), 400, -3300, -2900, 120, -60,
+                    60)
+        ut.bookHist(h, 'TargetTracker_xvsz_{}'.format(suffix),
+                    '{};z[cm];x[cm]'.format(
+                        title), 400, -3300, -2900, 120, -60,
+                    60)
         ut.bookHist(h, 'NuTauMu_{}'.format(suffix),
                     '{};x[cm];y[cm]'.format(title), 100, -300, +300, 100, -300,
+                    300)
+        ut.bookHist(h, 'NuTauMu_yvsz_{}'.format(suffix),
+                    '{};z[cm];y[cm]'.format(
+                        title), 200, -2680, -2480, 600, -300,
+                    300)
+        ut.bookHist(h, 'NuTauMu_xvsz_{}'.format(suffix),
+                    '{};z[cm];x[cm]'.format(
+                        title), 200, -2680, -2480, 600, -300,
                     300)
         ut.bookHist(h, 'ECAL_TP_{}'.format(suffix),
                     '{};x[cm];y[cm]'.format(title), 167, -501, +501, 334,
@@ -60,6 +90,18 @@ def main():
             ut.bookHist(h, 'T{}_{}'.format(station, suffix),
                         '{};x[cm];y[cm]'.format(title), 10, -250, +250, 20,
                         -500, 500)
+
+    ut.bookHist(h, 'NuTauMu_mu_p', '#mu#pm;p[GeV];', 100, 0, maxp)
+    ut.bookHist(h, 'NuTauMu_mu_pt', '#mu#pm;p_t[GeV];', 100, 0,
+                maxpt)
+    ut.bookHist(h, 'NuTauMu_mu_ppt', '#mu#pm;p[GeV];p_t[GeV];',
+                100, 0, maxp, 100, 0, maxpt)
+    ut.bookHist(h, 'NuTauMu_all_p', '#mu#pm;p[GeV];', 100, 0, maxp)
+    ut.bookHist(h, 'NuTauMu_all_pt', '#mu#pm;p_t[GeV];', 100, 0,
+                maxpt)
+    ut.bookHist(h, 'NuTauMu_all_ppt', '#mu#pm;p[GeV];p_t[GeV];',
+                100, 0, maxp, 100, 0, maxpt)
+
     for suffix in ['', '_original']:
         ut.bookHist(h, 'mu_p{}'.format(suffix), '#mu#pm;p[GeV];', 100, 0, maxp)
         ut.bookHist(h, 'mu_pt{}'.format(suffix), '#mu#pm;p_t[GeV];', 100, 0,
@@ -79,27 +121,11 @@ def main():
     ch = r.TChain('cbmsim')
     ch.Add(args.inputfile)
     n = ch.GetEntries()
-    print n
+    log.info(n)
     i = 0
     for event in ch:
-        default_weight = 0
-
-        def getMuonWeight():
-            if not default_weight:
-                weights = [
-                    m.GetWeight() for m in event.MCTrack
-                    if abs(m.GetPdgCode()) == 13 and m.GetProcName == 0
-                ]
-                if len(weights) == 0:
-                    print "getMuonWeight: no muon found"
-                    default_weight = 1.
-                if len(weights) > 1:
-                    print "getMuonWeight: more than one muon found"
-                default_weight = weights[0]
-            return default_weight
-
         if i % 10000 == 0:
-            print '{}/{}'.format(i, n)
+            log.info('{}/{}'.format(i, n))
         i += 1
         muon = False
         for hit in event.strawtubesPoint:
@@ -107,8 +133,8 @@ def main():
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 z = hit.GetZ()
@@ -120,7 +146,7 @@ def main():
                 pid = hit.PdgCode()
                 assert pid not in [12, -12, 14, -14, 16, -16]
                 detector_ID = hit.GetDetectorID()
-                station = detector_ID / 10000000
+                station = detector_ID // 10000000
                 h['T{}_all'.format(station)].Fill(x, y, weight)
                 if abs(pid) == 13:
                     muon = True
@@ -134,8 +160,8 @@ def main():
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 px = hit.GetPx()
@@ -157,22 +183,56 @@ def main():
                     h['ECAL_TP_mu'].Fill(x, y, weight)
                     h['ECAL_Alt_mu'].Fill(x, y, weight)
                 elif abs(pid) == 11:
-                    Esq = px**2 + py**2 + pz**2 + 0.000511**2
+                    Esq = px ** 2 + py ** 2 + pz ** 2 + 0.000511 ** 2
                     h['ECAL_e_E'].Fill(np.sqrt(Esq), weight)
                     h['ECAL_TP_e'].Fill(x, y, weight)
                     h['ECAL_Alt_e'].Fill(x, y, weight)
                 elif abs(pid) == 22:
-                    Esq = px**2 + py**2 + pz**2
+                    Esq = px ** 2 + py ** 2 + pz ** 2
                     h['ECAL_gamma_E'].Fill(np.sqrt(Esq), weight)
                     h['ECAL_TP_gamma'].Fill(x, y, weight)
                     h['ECAL_Alt_gamma'].Fill(x, y, weight)
+        for hit in event.TTPoint:
+            if hit:
+                if not hit.GetEnergyLoss() > 0:
+                    continue
+                trid = hit.GetTrackID()
+                assert trid > 0
+                detID = hit.GetDetectorID()
+                weight = event.MCTrack[trid].GetWeight()
+                x = hit.GetX()
+                y = hit.GetY()
+                z = hit.GetZ()
+                px = hit.GetPx()
+                py = hit.GetPy()
+                pz = hit.GetPz()
+                pt = np.hypot(px, py)
+                P = np.hypot(pz, pt)
+                pid = hit.PdgCode()
+                assert pid not in [12, -12, 14, -14, 16, -16]
+                if detID == 0:
+                    h['TargetTracker_all'].Fill(x, y, weight)
+                h['TargetTracker_xvsz_all'].Fill(z, x, weight)
+                h['TargetTracker_yvsz_all'].Fill(z, y, weight)
+                if abs(pid) == 13:
+                    muon = True
+                    muonid = trid
+                    h['mu_p'].Fill(P, weight)
+                    h['mu_pt'].Fill(pt, weight)
+                    h['mu_ppt'].Fill(P, pt, weight)
+                    if detID == 0:
+                        h['TargetTracker_mu'].Fill(x, y, weight)
+                    h['TargetTracker_xvsz_mu'].Fill(z, x, weight)
+                    h['TargetTracker_yvsz_mu'].Fill(z, y, weight)
         for hit in event.ShipRpcPoint:
             if hit:
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                detID = hit.GetDetectorID()
+                nplane = detID - 10000
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 z = hit.GetZ()
@@ -184,6 +244,14 @@ def main():
                 pid = hit.PdgCode()
                 assert pid not in [12, -12, 14, -14, 16, -16]
                 h['NuTauMu_all'].Fill(x, y, weight)
+                if nplane >= 0:
+                    h['NuTauMu_all_{}'.format(nplane)].Fill(x, y, weight)
+                h['NuTauMu_xvsz_all'].Fill(z, x, weight)
+                h['NuTauMu_yvsz_all'].Fill(z, y, weight)
+                if detID == 10000:
+                    h['NuTauMu_all_p'].Fill(P, weight)
+                    h['NuTauMu_all_pt'].Fill(pt, weight)
+                    h['NuTauMu_all_ppt'].Fill(P, pt, weight)
                 if abs(pid) == 13:
                     muon = True
                     muonid = trid
@@ -191,13 +259,22 @@ def main():
                     h['mu_pt'].Fill(pt, weight)
                     h['mu_ppt'].Fill(P, pt, weight)
                     h['NuTauMu_mu'].Fill(x, y, weight)
+                    if nplane >= 0:
+                        # fill the histogram corresponding to nplane
+                        h['NuTauMu_mu_{}'.format(nplane)].Fill(x, y, weight)
+                    if detID == 10000:
+                        h['NuTauMu_mu_p'].Fill(P, weight)
+                        h['NuTauMu_mu_pt'].Fill(pt, weight)
+                        h['NuTauMu_mu_ppt'].Fill(P, pt, weight)
+                    h['NuTauMu_xvsz_mu'].Fill(z, x, weight)
+                    h['NuTauMu_yvsz_mu'].Fill(z, y, weight)
         for hit in event.TimeDetPoint:
             if hit:
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 z = hit.GetZ()
@@ -221,8 +298,8 @@ def main():
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 px = hit.GetPx()
@@ -249,8 +326,8 @@ def main():
                 if not hit.GetEnergyLoss() > 0:
                     continue
                 trid = hit.GetTrackID()
-                weight = event.MCTrack[
-                    trid].GetWeight() if trid > 0 else getMuonWeight()
+                assert trid > 0
+                weight = event.MCTrack[trid].GetWeight()
                 x = hit.GetX()
                 y = hit.GetY()
                 z = hit.GetZ()
@@ -283,7 +360,7 @@ def main():
                         h['mu_ppt'].Fill(P, pt, weight)
                         h['SBT_Plastic_mu'].Fill(z, phi, weight)
                     continue
-                print 'Unidentified vetoPoint.'
+                log.warn('Unidentified vetoPoint.')
         if muon:
             original_muon = event.MCTrack[muonid]
             weight = original_muon.GetWeight()
@@ -293,7 +370,7 @@ def main():
                                       original_muon.GetPt(), weight)
             # NOTE: muons are counted several times if they create several hits
             #       But the original muon is only counted once.
-    print 'Event loop done'
+    log.info('Event loop done')
     for key in h:
         classname = h[key].Class().GetName()
         if 'TH' in classname or 'TP' in classname:

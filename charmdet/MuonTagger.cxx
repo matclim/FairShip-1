@@ -221,8 +221,7 @@ void MuonTagger::ConstructGeometry()
   
   TGeoVolume *top= gGeoManager->GetTopVolume(); 
 
-  TGeoBBox *MuonBox = new TGeoBBox(BoxX/2,BoxY/2,BoxZ/2);
-  TGeoVolume *VMuonBox = new TGeoVolume("VMuonBox", MuonBox,air);
+  TGeoVolumeAssembly *VMuonBox = new TGeoVolumeAssembly("VMuonBox");
   VMuonBox->SetTransparency(1);
   Double_t goliathcentre_to_beam = 178.6; //mm   
   Double_t walldisalignment = 15; //mm, all walls but one were disaligned with respect to the nominal beam position
@@ -335,7 +334,7 @@ void MuonTagger::ConstructGeometry()
        VMuonBox->AddNode(VPassive, n+1, new TGeoTranslation(0,0,fRPCz[n]-PasThicknessz[n]/2-7.5)); }
     else { 
        if (n==1) { VMuonBox->AddNode(VPassive, n+1, new TGeoTranslation(0,0,fRPCz[n]-PasThicknessz[n]/2.-(fRPCz[n]-fRPCz[n-1]-PasThicknessz[n])/2.)); }
-       else if (n==npassive-1) VMuonBox->AddNode(VPassive1, n+1, new TGeoTranslation(0,walldisalignment,fRPCz[n]-PasThicknessz[n]/2.-(fRPCz[n]-fRPCz[n-1]-PasThicknessz[n])/2.)); //last wall had been disaligned with respect to the others
+       //else if (n==npassive-1) VMuonBox->AddNode(VPassive1, n+1, new TGeoTranslation(0,walldisalignment,fRPCz[n]-PasThicknessz[n]/2.-(fRPCz[n]-fRPCz[n-1]-PasThicknessz[n])/2.)); //last wall had been disaligned with respect to the others
        else{
          VMuonBox->AddNode(VPassive1, n+1, new TGeoTranslation(0,0,fRPCz[n]-PasThicknessz[n]/2.-(fRPCz[n]-fRPCz[n-1]-PasThicknessz[n])/2.)); }  
     }
@@ -487,10 +486,17 @@ void MuonTagger::EndPoints(Int_t fDetectorID, TVector3 &vbot, TVector3 &vtop) {
   }
   TString stat="VMuonBox_1/VSensitive";stat+=+statnb;stat+="_";stat+=statnb;
   TString striptype;
-  if (orientationnb == 0) { striptype = "Hstrip_";}
-  if (orientationnb == 1) { striptype = "Vstrip_";}
-  TGeoNavigator* nav = gGeoManager->GetCurrentNavigator();  
-  TString path = "";path+="/";path+=stat;path+="/";path+=fDetectorID;
+  if (orientationnb == 0) { 
+    striptype = "Hstrip_";
+    if (fDetectorID%1000==116 || fDetectorID%1000==1){striptype = "Hstrip_ext_";}
+  }
+  if (orientationnb == 1) { 
+    striptype = "Vstrip_";
+    if (fDetectorID%1000==184){striptype = "Vstrip_L_";}
+    if (fDetectorID%1000==1){striptype = "Vstrip_R_";}
+  }
+  TGeoNavigator* nav = gGeoManager->GetCurrentNavigator();
+  TString path = "";path+="/";path+=stat;path+="/"+striptype;path+=fDetectorID;
   Bool_t rc = nav->cd(path);
   if (not rc){
        std::cout << "MuonTagger::StripEndPoints, TGeoNavigator failed "<<path<<std::endl; 
@@ -498,13 +504,19 @@ void MuonTagger::EndPoints(Int_t fDetectorID, TVector3 &vbot, TVector3 &vtop) {
   }  
   TGeoNode* W = nav->GetCurrentNode();
   TGeoBBox* S = dynamic_cast<TGeoBBox*>(W->GetVolume()->GetShape());
-  Double_t top[3] = {0,0,S->GetDZ()};
-  Double_t bot[3] = {0,0,-S->GetDZ()};
+  Double_t top[3] = {S->GetDX(),S->GetDY(),S->GetDZ()};
+  Double_t bot[3] = {-S->GetDX(),-S->GetDY(),-S->GetDZ()};
   Double_t Gtop[3],Gbot[3];
   nav->LocalToMaster(top, Gtop);
   nav->LocalToMaster(bot, Gbot);
-  vtop.SetXYZ(Gbot[0],Gbot[1],Gbot[2]);   
-  vbot.SetXYZ(Gtop[0],Gtop[1],Gtop[2]);        
+  if (orientationnb ==0) {
+     vtop.SetXYZ(Gbot[0],(Gbot[1]+Gtop[1])/2.,(Gtop[2]+Gbot[2])/2.);    
+     vbot.SetXYZ(Gtop[0],(Gbot[1]+Gtop[1])/2.,(Gtop[2]+Gbot[2])/2.);      
+  }     
+  if (orientationnb ==1) {
+     vtop.SetXYZ((Gtop[0]+Gbot[0])/2.,Gbot[1],(Gtop[2]+Gbot[2])/2.);    
+     vbot.SetXYZ((Gtop[0]+Gbot[0])/2.,Gtop[1],(Gtop[2]+Gbot[2])/2.);      
+  }       
 }
 
 ClassImp(MuonTagger)

@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import ROOT as r
 import math
@@ -11,11 +12,36 @@ mProton = 0.938272081 # GeV/c - PDG2016
 protonEnergy = 400. # GeV/c
 protonMomentum = math.sqrt(protonEnergy*protonEnergy - mProton*mProton)
 
+#VDM FORM FACTOR
+def rhoFormFactor(m):
+     """ From https://arxiv.org/abs/0910.5589 """
+     #constants from the code from Inar: https://github.com/pgdeniverville/BdNMC/blob/master/src/Proton_Brem_Distribution.cpp
+     f1ra = 0.6165340033101271
+     f1rb = 0.22320420111672623
+     f1rc = -0.33973820442685326
+     f1wa = 1.0117544786579074
+     f1wb = -0.8816565944110686
+     f1wc = 0.3699021157531611
+     f1prho = f1ra*0.77**2/(0.77**2-m**2-0.77*0.15j)
+     f1prhop = f1rb*1.25**2/(1.25**2-m**2-1.25*0.3j)
+     f1prhopp = f1rc*1.45**2/(1.45**2-m**2-1.45*0.5j)
+     f1pomega = f1wa*0.77**2/(0.77**2-m**2-0.77*0.0085j)
+     f1pomegap = f1wb*1.25**2/(1.25**2-m**2-1.25*0.3j)
+     f1pomegapp = f1wc*1.45**2/(1.45**2-m**2-1.45*0.5j)
+     return abs(f1prho+f1prhop+f1prhopp+f1pomega+f1pomegap+f1pomegapp)
+
 # useful functions
 def energy(p,m):
     """ Compute energy from momentum and mass """
     return math.sqrt(p*p + m*m)
 
+def penaltyFactor(m):
+    """ Penalty factor for high masses - dipole form factor in the proton-A' vertex """
+    """ m in GeV """
+    if m*m>0.71:
+        return math.pow(m*m/0.71,-4)
+    else:
+        return 1
 
 def zeta(p, theta):
     """ Fraction of the proton momentum carried away by the paraphoton in the beam direction """
@@ -164,8 +190,9 @@ def hProdPDF(mDarkPhoton, epsilon, norm, binsp, binstheta, tmin = -0.5 * math.pi
             hPDFp.Fill(p,w)
     hPdfFilename = sys.modules['__main__'].outputDir+"/ParaPhoton_eps%s_m%s%s.root"%(epsilon,mDarkPhoton,suffix)
     outfile = r.TFile(hPdfFilename,"recreate")
-    weight = hPDF.Integral("width")
-    hPDF.Scale(1./weight)
+    #weight = hPDF.Integral("width")
+    #print "Weight = %3.3f"%weight
+    #hPDF.Scale(1./weight)
     hPDF.Write()
     hPDFp.Write()
     hPDFtheta.Write()

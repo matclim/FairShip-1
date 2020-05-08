@@ -13,14 +13,11 @@
 #include "Pythia8Plugins/EvtGen.h"
 #include "EvtGenBase/EvtSimpleRandomEngine.hh"
 #include "EvtGenBase/EvtRandom.hh"
-#include "TDatabasePDG.h"
 #include "TMCProcess.h"
 
 const Double_t cm = 10.; // pythia units are mm
 const Double_t c_light = 2.99792458e+10; // speed of light in cm/sec (c_light   = 2.99792458e+8 * m/s)
 const Double_t mbarn = 1E-3*1E-24*TMath::Na(); // cm^2 * Avogadro
-
-using namespace Pythia8;
 
 // -----   Default constructor   -------------------------------------------
 FixedTargetGenerator::FixedTargetGenerator() 
@@ -255,41 +252,14 @@ Bool_t FixedTargetGenerator::Init()
    bparam = fMaterialInvestigator->MeanMaterialBudget(start, end, mparam);
    maxCrossSection =  mparam[9];
   }
-  // book hists for Genie neutrino momentum distribution
-  // add also leptons, and photon
-  TDatabasePDG* PDG = TDatabasePDG::Instance();
-  for(Int_t idnu=11; idnu<19; idnu+=1){
-  // nu or anti-nu
-   if (idnu==18){idnu=22;}  
-   for (Int_t idadd=-1; idadd<3; idadd+=2){
-    Int_t idhnu=1000+idnu;
-    Int_t idw=idnu;
-    if (idadd==-1){
-     idhnu+=1000;
-     idw=-idnu;
-    }
-    if (idnu==22){idadd=3;idw=idnu;}
-    TString name=PDG->GetParticle(idw)->GetName();
-    TString title = name;title+=" momentum (GeV)";
-    TString key = "";key+=idhnu;
-    TSeqCollection* fileList=gROOT->GetListOfFiles();
-    ((TFile*)fileList->At(0))->cd();
-    TH1D* Hidhnu = new TH1D(key,title,400,0.,400.);
-    title = name;title+="  log10-p vs log10-pt";
-    key = "";key+=idhnu+100;
-    TH2D* Hidhnu100 = new TH2D(key,title,100,-0.3,1.7,100,-2.,0.5);
-    title = name;title+="  log10-p vs log10-pt";
-    key = "";key+=idhnu+200;
-    TH2D* Hidhnu200 = new TH2D(key,title,25,-0.3,1.7,100,-2.,0.5);
-   }
-  }
+
   return kTRUE;
 }
 // -------------------------------------------------------------------------
 
 
 // -----   Destructor   ----------------------------------------------------
-FixedTargetGenerator::~FixedTargetGenerator() 
+FixedTargetGenerator::~FixedTargetGenerator()
 {
 }
 // -------------------------------------------------------------------------
@@ -388,7 +358,7 @@ Bool_t FixedTargetGenerator::ReadEvent(FairPrimaryGenerator* cpg)
      Double_t z  = fPythia->event[ii].zProd()+zinter;
      Double_t x  = fPythia->event[ii].xProd()+xOff;
      Double_t y  = fPythia->event[ii].yProd()+yOff;
-     Double_t tof = fPythia->event[ii].tProd();
+     Double_t tof = fPythia->event[ii].tProd() / (10*c_light) ; // to go from mm to s
      Double_t px = fPythia->event[ii].px();  
      Double_t py = fPythia->event[ii].py();  
      Int_t im = fPythia->event[ii].mother1()-1;
