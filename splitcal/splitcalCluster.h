@@ -2,7 +2,7 @@
 #define SPLITCALCLUSTER_H 1
 
 #include "TObject.h"              //  
-
+#include <iostream>
 #include "splitcalHit.h"
 #include <vector> 
 //#include <boost/python.hpp>
@@ -47,8 +47,9 @@ class splitcalCluster : public TObject
     void SetEndPoint(const double& x, const double& y, const double& z) {_end.SetXYZ(x,y,z);}
     void SetEndPoint(splitcalHit*& h);
     void SetVectorOfHits(std::vector<splitcalHit* >& v) {_vectorOfHits = v;}
-    void AddHit(splitcalHit* h) {_vectorOfHits.push_back(h);}
+    void AddHit(splitcalHit* h) {if(h->GetIsPrecisionLayer()){std::cout << "AddHit HPLStat " << h->GetIsPrecisionLayer() << std::endl;} _vectorOfHits.push_back(h);}
 
+    bool GetIsHPL(){return IsHPL;}
     int GetIndex() {return _index;}
     double GetEta() {return _eta;}
     double GetPhi() {return _phi;}
@@ -62,7 +63,7 @@ class splitcalCluster : public TObject
     TVector3 GetStartPoint() {return _start; }
     TVector3 GetEndPoint() {return _end; }
     std::vector<splitcalHit* >& GetVectorOfHits() {return _vectorOfHits;}
-
+     
     regression LinearRegression(std::vector<double >& x, std::vector<double >& y);
     void ComputeEtaPhiE();
     
@@ -82,7 +83,7 @@ class splitcalCluster : public TObject
     TVector3 _start;
     TVector3 _end;
     std::vector<splitcalHit* > _vectorOfHits;
-
+    bool IsHPL= 0;
     // temporary for test
     double _mZX, _qZX;
     double _mZY, _qZY;
