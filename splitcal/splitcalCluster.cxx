@@ -24,7 +24,6 @@ splitcalCluster::splitcalCluster()
 // -----   constructor from splitcalHit   ------------------------------------------
 splitcalCluster::splitcalCluster(splitcalHit* h)
 {
-  std::cout << "We have " << h-> GetIsPrecisionLayer() << std::endl;
   if(h->GetIsPrecisionLayer()){IsHPL=1;}
   _vectorOfHits.push_back(h);
  

@@ -100,7 +100,9 @@ class ShipDigiReco:
 # optional if present, splitcalCluster
   if self.sTree.GetBranch("splitcalPoint"):
    self.digiSplitcal = ROOT.TClonesArray("splitcalHit") 
+   self.digiSplitcalHPL = ROOT.TClonesArray("splitcalHit") 
    self.digiSplitcalBranch=self.sTree.Branch("Digi_SplitcalHits",self.digiSplitcal,32000,-1) 
+   self.digiSplitcalHPLBranch=self.sTree.Branch("Digi_SplitcalHPLHits",self.digiSplitcalHPL,32000,-1) 
    self.recoSplitcal = ROOT.TClonesArray("splitcalCluster") 
    self.recoSplitcalHPL = ROOT.TClonesArray("splitcalCluster") 
    self.recoSplitcalBranch=self.sTree.Branch("Reco_SplitcalClusters",self.recoSplitcal,32000,-1) 
@@ -251,9 +253,11 @@ class ShipDigiReco:
    self.digiMuonBranch.Fill()
    if self.sTree.GetBranch("splitcalPoint"):
     self.digiSplitcal.Delete()
+    self.digiSplitcalHPL.Delete()
     self.recoSplitcal.Delete()
     self.recoSplitcalHPL.Delete()
     self.digitizeSplitcal()
+    self.digiSplitcalHPLBranch.Fill()
     self.digiSplitcalBranch.Fill()
     self.recoSplitcalBranch.Fill()
     self.recoSplitcalHPLBranch.Fill()
@@ -276,6 +280,8 @@ class ShipDigiReco:
          indexOfExistingHit = listOfDetID[detID]
          self.digiSplitcal[indexOfExistingHit].UpdateEnergy(aHit.GetEnergy())
      else: #high precision layers
+       print("MC point X: ",aMCPoint.GetX()," MC point Y: ",aMCPoint.GetY())
+       print("X hit: ",aHit.GetX(), " Y hit ",aHit.GetY()) 
        aHit.SetHighPrecisionCellSize(0.1,0.1) #cm
        hit1_nL = aHit.GetLayerNumber()
        hit1_x = aHit.GetX()
@@ -294,14 +300,14 @@ class ShipDigiReco:
              break
          if not sameCoord:
            listHighPrecisionHits.append(aHit)
-   
+   print("listHighPrecisionHits size: ", len(listHighPrecisionHits))
    for hpHit in listHighPrecisionHits:
-     if self.digiSplitcal.GetSize() == index: 
-       self.digiSplitcal.Expand(index+1000)
-     self.digiSplitcal[index]=hpHit
+     if self.digiSplitcalHPL.GetSize() == index: 
+       self.digiSplitcalHPL.Expand(index+1000)
+     self.digiSplitcalHPL[index]=hpHit
      index+=1
      
-   self.digiSplitcal.Compress() #remove empty slots from array
+   self.digiSplitcalHPL.Compress() #remove empty slots from array
 
    ##########################    
    # cluster reconstruction #
@@ -328,8 +334,9 @@ class ShipDigiReco:
 
    self.step = 1 
    self.input_hits = list_hits_above_threshold
-   list_clusters_of_hits = self.Clustering()[0]
-   list_clusters_of_HPLhits = self.Clustering()[1]
+   clusterset=self.Clustering()
+   list_clusters_of_hits = clusterset[0]
+   list_clusters_of_HPLhits = clusterset[1]
 
    # step 2: to check if clusters can be split do clustering separtely in the XZ and YZ planes
 
@@ -343,7 +350,7 @@ class ShipDigiReco:
 #---------------------------------------------------------------
 
 
-   for i in list_clusters_of_HPLhits:
+   for i in list_clusters_of_HPLhits: 
 
      list_HPLhits_x = []
      list_HPLhits_y = []
@@ -552,11 +559,11 @@ class ShipDigiReco:
    # fill clusters #
    #################
 
+   print("size of list_final_HPLclusters: ", len(list_final_HPLclusters))
    for i in list_final_HPLclusters: 
      # print '------------------------'
      # print '------ digitizeSplitcal - cluster n = ', i 
      # print '------ digitizeSplitcal - cluster size = ', len(list_final_clusters[i]) 
-
      for j,h in enumerate(list_final_HPLclusters[i]):
        if j==0: aCluster = ROOT.splitcalCluster(h)
        else: aCluster.AddHit(h)
@@ -572,6 +579,7 @@ class ShipDigiReco:
 
 
 
+   print("size of list_final_clusters: ", len(list_final_clusters))
    for i in list_final_clusters: 
      # print '------------------------'
      # print '------ digitizeSplitcal - cluster n = ', i 
@@ -748,7 +756,7 @@ class ShipDigiReco:
 
 
  def Clustering(self): 
-
+   print("Clustering")
    list_hits_in_cluster = {}
    list_hits_in_HPLcluster={}
    cluster_index = -1
@@ -758,7 +766,7 @@ class ShipDigiReco:
      if hit.IsUsed()==1:
        continue
      if hit.GetIsPrecisionLayer(): #HPL clustering
-
+      print("ABC")
       neighbours = self.getNeighbours(hit)
       # hit.Print()
       # #print "--- digitizeSplitcal - index of unused hit = ", i
