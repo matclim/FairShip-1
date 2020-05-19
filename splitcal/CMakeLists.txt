@@ -23,6 +23,7 @@ splitcal.cxx
 splitcalContFact.cxx
 splitcalPoint.cxx
 splitcalHit.cxx
+splitcalHPLHit.cxx
 splitcalCluster.cxx
 )
 
