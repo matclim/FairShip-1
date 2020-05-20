@@ -89,7 +89,7 @@ void splitcalCluster::ComputeEtaPhiE()
   auto const& firstElementY = mapLayerWeigthedY.begin();
   int minLayerY = firstElementY->first;
   double minY = firstElementY->second/mapLayerSumWeigthsY[minLayerY];
-  double minZ2 = mapLayerZ1[minLayerY];
+  double minZ2 = mapLayerZ2[minLayerY];
   
   double minZ = (minZ1+minZ2)/2.;
   
@@ -103,7 +103,7 @@ void splitcalCluster::ComputeEtaPhiE()
   auto const& lastElementY = mapLayerWeigthedY.rbegin();
   int maxLayerY = lastElementY->first;
   double maxY = lastElementY->second/mapLayerSumWeigthsY[maxLayerY];
-  double maxZ2 = mapLayerZ1[maxLayerY];
+  double maxZ2 = mapLayerZ2[maxLayerY];
   
   double maxZ = (maxZ1+maxZ2)/2.;
   

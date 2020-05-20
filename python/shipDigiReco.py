@@ -269,7 +269,7 @@ class ShipDigiReco:
    for aMCPoint in self.sTree.splitcalPoint:
      aHit = ROOT.splitcalHit(aMCPoint,self.sTree.t0)
      detID = aHit.GetDetectorID()
-     if not aHit.GetIsPrecisionLayer(): #different treatment for high precision layers (geometry less advanced/defined) 
+     if not aHit.GetIsPrecisionLayer(): #different treatment for high precisin layers (geometry less advanced/defined) 
        if detID not in listOfDetID:
          if self.digiSplitcal.GetSize() == index: 
            self.digiSplitcal.Expand(index+1000)

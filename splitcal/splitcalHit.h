@@ -35,6 +35,7 @@ class splitcalHit : public ShipHit
     void Decoder(int& id, int& isPrecision, int& nLayer, int& nModuleX, int& nMdouleY, int& nStrip);
     void Decoder(std::string& encodedID, int& isPrecision, int& nLayer, int& nModuleX, int& nMdouleY, int& nStrip);
 
+    void SetHighPrecisionCellSize(float x, float y) {_hpCellX = x; _hpCellY = y;}
     void SetXYZ(double& x, double& y, double& z) {_x = x; _y = y; _z = z;}
     void SetIDs(int& isPrecision, int& nLayer, int& nModuleX, int& nModuleY, int& nStrip) {_isPrecisionLayer = isPrecision; _nLayer = nLayer; _nModuleX = nModuleX; _nModuleY=nModuleY; _nStrip = nStrip;} 
     void SetEnergy(double& e) {_energy = e;}
@@ -78,6 +79,7 @@ class splitcalHit : public ShipHit
   private:
 
     Float_t flag;   
+    float _hpCellX, _hpCellY;
     double _x, _y, _z, _xError, _yError, _zError;
     double _energy;// _energyWeight;
     /* std::string _nameSubDetector;  */
