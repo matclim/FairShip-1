@@ -100,7 +100,7 @@ class ShipDigiReco:
 # optional if present, splitcalCluster
   if self.sTree.GetBranch("splitcalPoint"):
    self.digiSplitcal = ROOT.TClonesArray("splitcalHit") 
-   self.digiSplitcalHPL = ROOT.TClonesArray("splitcalHit") 
+   self.digiSplitcalHPL = ROOT.TClonesArray("splitcalHPLHit") 
    self.digiSplitcalBranch=self.sTree.Branch("Digi_SplitcalHits",self.digiSplitcal,32000,-1) 
    self.digiSplitcalHPLBranch=self.sTree.Branch("Digi_SplitcalHPLHits",self.digiSplitcalHPL,32000,-1) 
    self.recoSplitcal = ROOT.TClonesArray("splitcalCluster") 
@@ -280,34 +280,32 @@ class ShipDigiReco:
          indexOfExistingHit = listOfDetID[detID]
          self.digiSplitcal[indexOfExistingHit].UpdateEnergy(aHit.GetEnergy())
      else: #high precision layers
-       print("MC point X: ",aMCPoint.GetX()," MC point Y: ",aMCPoint.GetY())
-       print("X hit: ",aHit.GetX(), " Y hit ",aHit.GetY()) 
-       aHit.SetHighPrecisionCellSize(0.1,0.1) #cm
-       hit1_nL = aHit.GetLayerNumber()
-       hit1_x = aHit.GetX()
-       hit1_y = aHit.GetY()
-       if len(listHighPrecisionHits)==0:
-         listHighPrecisionHits.append(aHit)
-         continue
-       else:
-         sameCoord = False 
-         for hit2 in listHighPrecisionHits:
-           hit2_nL = hit2.GetLayerNumber()
-           hit2_x =  hit2.GetX()
-           hit2_y =  hit2.GetY()
-           if hit1_nL == hit2_nL and hit1_x == hit2_x and hit1_y == hit2_y:
-             hit2.UpdateEnergy(aHit.GetEnergy())
-             break
-         if not sameCoord:
-           listHighPrecisionHits.append(aHit)
-   print("listHighPrecisionHits size: ", len(listHighPrecisionHits))
-   for hpHit in listHighPrecisionHits:
-     if self.digiSplitcalHPL.GetSize() == index: 
-       self.digiSplitcalHPL.Expand(index+1000)
-     self.digiSplitcalHPL[index]=hpHit
-     index+=1
+       aHit=ROOT.splitcalHPLHit(aMCPoint,self.sTree.t0)
+       #aHit.SetHighPrecisionCellSize(0.1,0.1) #cm
+       #hit1_nL = aHit.GetLayerNumber()
+       #hit1_x = aHit.GetX()
+       #hit1_y = aHit.GetY()
+       #if len(listHighPrecisionHits)==0:
+       #  listHighPrecisionHits.append(aHit)
+       #  continue
+       #else:
+       #  sameCoord = False 
+       #  for hit2 in listHighPrecisionHits:
+       #    hit2_nL = hit2.GetLayerNumber()
+       #    hit2_x =  hit2.GetX()
+       #    hit2_y =  hit2.GetY()
+       #    if hit1_nL == hit2_nL and hit1_x == hit2_x and hit1_y == hit2_y:
+       #      hit2.UpdateEnergy(aHit.GetEnergy())
+       #      break
+       #  if not sameCoord:
+       #    listHighPrecisionHits.append(aHit)
+   #for hpHit in listHighPrecisionHits:
+   #  if self.digiSplitcalHPL.GetSize() == index: 
+   #    self.digiSplitcalHPL.Expand(index+1000)
+   #  self.digiSplitcalHPL[index]=hpHit
+   #  index+=1
      
-   self.digiSplitcalHPL.Compress() #remove empty slots from array
+   #self.digiSplitcalHPL.Compress() #remove empty slots from array
 
    ##########################    
    # cluster reconstruction #
@@ -765,50 +763,9 @@ class ShipDigiReco:
    for i,hit in enumerate(self.input_hits):
      if hit.IsUsed()==1:
        continue
-     if hit.GetIsPrecisionLayer(): #HPL clustering
-      print("ABC")
-      neighbours = self.getNeighbours(hit)
-      # hit.Print()
-      # #print "--- digitizeSplitcal - index of unused hit = ", i
-      # print '--- digitizeSplitcal - hit has n neighbours = ', len(neighbours)
-  
-      if len(neighbours) < 1:
-        # # hit.SetClusterIndex(-1) # lonely fragment
-        # print '--- digitizeSplitcal - lonely fragment '
-        continue
-  
-      cluster_index = cluster_index + 1
-      hit.SetIsUsed(1)
-      # hit.SetClusterIndex(cluster_index)
-      list_hits_in_HPLcluster[cluster_index] = []
-      list_hits_in_HPLcluster[cluster_index].append(hit)
-      #print '--- digitizeSplitcal - cluster_index = ', cluster_index
-  
-      for neighbouringHit in neighbours:
-        # print '--- digitizeSplitcal - in neighbouringHit - len(neighbours) = ', len(neighbours)
-  
-        if neighbouringHit.IsUsed()==1: 
-          continue
-  
-        # neighbouringHit.SetClusterIndex(cluster_index)
-        neighbouringHit.SetIsUsed(1)
-        list_hits_in_HPLcluster[cluster_index].append(neighbouringHit)
-        
-        # ## test ###
-        # # for step 2, add hits of different type to subcluster but to not look for their neighbours
-        # not_same_type = hit.IsX() != neighbouringHit.IsX()
-        # if self.step==2 and not_same_type:
-        #   continue
-        # ###########
-  
-        expand_neighbours = self.getNeighbours(neighbouringHit)
-        # print '--- digitizeSplitcal - len(expand_neighbours) = ', len(expand_neighbours)
-  
-        if len(expand_neighbours) >= 1:
-          for additionalHit in expand_neighbours:
-            if additionalHit not in neighbours:
-              neighbours.append(additionalHit)
 
+     if hit.GetIsPrecisionLayer() :
+      print("ABC")
      else: #Scintillator clustering
 
       neighbours = self.getNeighbours(hit)
