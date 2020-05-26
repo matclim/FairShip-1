@@ -1,5 +1,6 @@
 #include "splitcalHPLHit.h"
 #include "splitcal.h"
+#include "splitcalPoint.h"
 #include "TVector3.h"
 #include "FairRun.h"
 #include "FairRunSim.h"

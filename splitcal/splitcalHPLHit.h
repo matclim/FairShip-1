@@ -7,7 +7,8 @@
 #include "TObject.h"
 #include "TVector3.h"
 
-class splitcalHPLHit : public ShipHit 
+
+class splitcalHPLHit : public ShipHit
 {
   public:
 
