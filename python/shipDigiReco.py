@@ -102,7 +102,9 @@ class ShipDigiReco:
    self.digiSplitcal = ROOT.TClonesArray("splitcalHit") 
    self.digiSplitcalBranch=self.sTree.Branch("Digi_SplitcalHits",self.digiSplitcal,32000,-1) 
    self.recoSplitcal = ROOT.TClonesArray("splitcalCluster") 
+   self.recoSplitcalHPL = ROOT.TClonesArray("splitcalHPLCluster") 
    self.recoSplitcalBranch=self.sTree.Branch("Reco_SplitcalClusters",self.recoSplitcal,32000,-1) 
+   self.recoSplitcalHPLBranch=self.sTree.Branch("Reco_SplitcalHPLClusters",self.recoSplitcalHPL,32000,-1) 
 
 # setup ecal reconstruction
   self.caloTasks = []  
@@ -250,9 +252,11 @@ class ShipDigiReco:
    if self.sTree.GetBranch("splitcalPoint"):
     self.digiSplitcal.Delete()
     self.recoSplitcal.Delete()
+    self.recoSplitcalHPL.Delete()
     self.digitizeSplitcal()
     self.digiSplitcalBranch.Fill()
     self.recoSplitcalBranch.Fill()
+    self.recoSplitcalHPLBranch.Fill()
 
  def digitizeSplitcal(self):  
    listOfDetID = {} # the idea is to keep only one hit for each cell/strip and if more points fall in the same cell/strip just sum up the energy
@@ -278,8 +282,10 @@ class ShipDigiReco:
    # hit selection
    # step 0: select hits above noise threshold to use in cluster reconstruction  
    noise_energy_threshold = 0.002 #GeV
+   noise_energy_threshold_HPL = 0.000002 #GeV
    #noise_energy_threshold = 0.0015 #GeV
    list_hits_above_threshold = []
+   list_hits_above_threshold_HPL = []
    # print '--- digitizeSplitcal - self.digiSplitcal.GetSize() = ', self.digiSplitcal.GetSize()  
    for hit in self.digiSplitcal:
      if hit.GetEnergy() > noise_energy_threshold:
@@ -287,7 +293,15 @@ class ShipDigiReco:
        # hit.SetEnergyWeight(1)
        list_hits_above_threshold.append(hit)
 
+   for hit in self.digiSplitcal:
+     if ((hit.GetEnergy() > noise_energy_threshold_HPL) and (hit.GetIsPrecisionLayer())):
+       hit.SetIsUsed(0)
+       # hit.SetEnergyWeight(1)
+       list_hits_above_threshold_HPL.append(hit)
+
+
    self.list_hits_above_threshold = list_hits_above_threshold
+   self.list_hits_above_threshold_HPL = list_hits_above_threshold_HPL
 
    # print '--- digitizeSplitcal - n hits above threshold = ', len(list_hits_above_threshold) 
     
@@ -431,8 +445,28 @@ class ShipDigiReco:
 
    self.recoSplitcal.Compress() #remove empty slots from array
 
+   print(len(list_hits_above_threshold_HPL))
+   for k,i in enumerate(list_hits_above_threshold_HPL):
+     # print '------------------------'
+     # print '------ digitizeSplitcal - cluster n = ', i 
+     # print '------ digitizeSplitcal - cluster size = ', len(list_final_clusters[i]) 
 
-   # #################
+     #for j,h in enumerate(list_hits_above_threshold_HPL[i]):
+       #if j==0: aCluster = ROOT.splitcalHPLCluster(h)
+       #else: aCluster.AddHit(h)
+     aCluster = ROOT.splitcalHPLCluster(h)
+     aCluster.SetIndex(int(k))
+     #aCluster.ComputeEtaPhiE()
+     # aCluster.Print()
+
+     if self.recoSplitcalHPL.GetSize() == i:
+       self.recoSplitcalHPL.Expand(i+1000)
+     self.recoSplitcalHPL[k]=aCluster
+
+   self.recoSplitcal.Compress() #remove empty slots from array
+
+
+# #################
    # # visualisation #
    # #################
 

@@ -9,4 +9,5 @@
 #pragma link C++ class splitcalPoint+;
 #pragma link C++ class splitcalHit+;
 #pragma link C++ class splitcalCluster+;
+#pragma link C++ class splitcalHPLCluster+;
 #endif

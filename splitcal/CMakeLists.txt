@@ -25,6 +25,7 @@ splitcalContFact.cxx
 splitcalPoint.cxx
 splitcalHit.cxx
 splitcalCluster.cxx
+splitcalHPLCluster.cxx
 )
 
 Set(LINKDEF splitcalLinkDef.h)
