@@ -310,14 +310,20 @@ class ShipDigiReco:
 
    self.step = 1 
    self.input_hits = list_hits_above_threshold
+   self.input_HPLhits = list_hits_above_threshold_HPL
    list_clusters_of_hits = self.Clustering()
+   list_clusters_of_hits_HPL = self.ClusteringHPL()
+
+   
 
    # step 2: to check if clusters can be split do clustering separtely in the XZ and YZ planes
 
    self.step = 2 
    # print "--- digitizeSplitcal ==== STEP 2 ==== "
    list_final_clusters = {}
+   list_final_clusters_HPL = {}
    index_final_cluster = 0
+   index_final_cluster_HPL = 0
 
    for i in list_clusters_of_hits:
 
@@ -328,6 +334,16 @@ class ShipDigiReco:
        if hit.IsX(): list_hits_x.append(hit)
        if hit.IsY(): list_hits_y.append(hit) # FIXME: check if this could work also with high precision layers
      
+   for i in list_clusters_of_hits_HPL:
+
+     list_hits_x_HPL = []
+     list_hits_y_HPL = []
+     for hit in list_clusters_of_hits_HPL[i]:
+       hit.SetIsUsed(0)
+       if hit.IsX(): list_hits_x_HPL.append(hit)
+       if hit.IsY(): list_hits_y_HPL.append(hit) # FIXME: check if this could work also with high precision layers
+     
+     ###########       
      ###########       
 
      #re-run reclustering only in xz plane possibly with different criteria 
@@ -335,11 +351,16 @@ class ShipDigiReco:
      list_subclusters_of_x_hits = self.Clustering()
      cluster_energy_x = self.GetClusterEnergy(list_hits_x)
      
+     self.input_hits_HPL = list_hits_x_HPL
+     list_subclusters_of_x_hits_HPL = self.ClusteringHPL()
+     cluster_energy_x_HPL = self.GetHPLClusterEnergy(list_hits_x)
      # print "--- digitizeSplitcal - len(list_subclusters_of_x_hits) = ", len(list_subclusters_of_x_hits)
 
      self.list_subclusters_of_hits = list_subclusters_of_x_hits
      list_of_subclusters_x = self.GetSubclustersExcludingFragments()
 
+     self.list_subclusters_of_hits_HPL = list_subclusters_of_x_hits_HPL
+     list_of_subclusters_x_HPL = self.GetHPLSubclustersExcludingFragments()
      # compute energy weight
      weights_from_x_splitting = {}
      for index_subcluster in list_of_subclusters_x:
@@ -348,17 +369,32 @@ class ShipDigiReco:
        # print "======> weight = ", weight 
        weights_from_x_splitting[index_subcluster] = weight
      
+
+     weights_from_x_splitting_HPL = {}
+     for index_subcluster in list_of_subclusters_x_HPL:
+       subcluster_energy_x_HPL = self.GetHPLClusterEnergy(list_of_subclusters_x[index_subcluster])
+       HPLweight = subcluster_energy_x_HPL/HPLcluster_energy_x
+       # print "======> weight = ", weight 
+       weights_from_x_splitting[index_subcluster] = weight
      ###########       
 
      #re-run reclustering only in yz plane possibly with different criteria 
      self.input_hits = list_hits_y
      list_subclusters_of_y_hits = self.Clustering()
      cluster_energy_y = self.GetClusterEnergy(list_hits_y)
-     
+    
+      
+     self.input_hits_HPL = list_hits_y_HPL
+     list_subclusters_of_y_hits_HPL = self.ClusteringHPL()
+     cluster_energy_y_HPL = self.GetClusterEnergy(list_hits_y_HPL)
      # print "--- digitizeSplitcal - len(list_subclusters_of_y_hits) = ", len(list_subclusters_of_y_hits)
 
      self.list_subclusters_of_hits = list_subclusters_of_y_hits
      list_of_subclusters_y = self.GetSubclustersExcludingFragments()
+
+
+     self.list_subclusters_of_hits_HPL = list_subclusters_of_y_hits_HPL
+     list_of_subclusters_y_HPL = self.GetHPLSubclustersExcludingFragments()
 
      # compute energy weight
      weights_from_y_splitting = {}
@@ -367,6 +403,13 @@ class ShipDigiReco:
        weight = subcluster_energy_y/cluster_energy_y
        # print "======> weight = ", weight 
        weights_from_y_splitting[index_subcluster] = weight
+
+     weights_from_y_splitting_HPL = {}
+     for index_subcluster in list_of_subclusters_y_HPL:
+       subcluster_energy_y_HPL = self.GetHPLClusterEnergy(list_of_subclusters_y_HPL[index_subcluster])
+       weight = subcluster_energy_y_HPL/cluster_energy_y_HPL
+       # print "======> weight = ", weight 
+       weights_from_y_splitting_HPL[index_subcluster] = weight
 
 
      ###########       
@@ -398,6 +441,31 @@ class ShipDigiReco:
          
            list_final_clusters[index_final_cluster] = list_of_subclusters_y[iy] + list_of_subclusters_x[ix]
            index_final_cluster += 1
+
+     if list_of_subclusters_x_HPL == 1 and list_of_subclusters_y_HPL == 1:
+       list_final_clusters_HPL[index_final_cluster_HPL] = list_clusters_of_hits_HPL[i]
+       for hit in list_final_clusters_HPL[index_final_cluster_HPL]:
+         hit.AddClusterIndex(index_final_cluster_HPL)
+         hit.AddEnergyWeight(1.)
+       index_final_cluster_HPL += 1
+     else:
+
+       # this works, but one could try to reduce the number of shared hits 
+
+       for ix in list_of_subclusters_x_HPL:
+         for iy in list_of_subclusters_y_HPL:
+
+           for hit in list_of_subclusters_y_HPL[iy]:
+              hit.AddClusterIndex(index_final_cluster_HPL)
+              hit.AddEnergyWeight(weights_from_x_splitting_HPL[ix])
+
+           for hit in list_of_subclusters_x[ix]:
+              hit.AddClusterIndex(index_final_cluster)
+              hit.AddEnergyWeight(weights_from_y_splitting_HPL[iy])
+
+           list_final_clusters[index_final_cluster_HPL] = list_of_subclusters_y_HPL[iy] + list_of_subclusters_x_HPL[ix]
+           index_final_cluster_HPL += 1
+
 
        # # try to reduce number of shared hits (if it does not work go back to solution above)
        # # ok, it has potential but it needs more thinking
@@ -445,28 +513,27 @@ class ShipDigiReco:
 
    self.recoSplitcal.Compress() #remove empty slots from array
 
-   print(len(list_hits_above_threshold_HPL))
-   for k,i in enumerate(list_hits_above_threshold_HPL):
+
+
+# in list_final_clusters:
      # print '------------------------'
      # print '------ digitizeSplitcal - cluster n = ', i 
      # print '------ digitizeSplitcal - cluster size = ', len(list_final_clusters[i]) 
 
-     #for j,h in enumerate(list_hits_above_threshold_HPL[i]):
-       #if j==0: aCluster = ROOT.splitcalHPLCluster(h)
-       #else: aCluster.AddHit(h)
-     aCluster = ROOT.splitcalHPLCluster(h)
-     aCluster.SetIndex(int(k))
-     #aCluster.ComputeEtaPhiE()
+     for j,h in enumerate(list_final_clustersi_HPL[i]):
+       if j==0: aCluster = ROOT.splitcalHPLCluster(h)
+       else: aCluster.AddHit(h)
+
+     aCluster.SetIndex(int(i))
+     aCluster.ComputeEtaPhiE()
      # aCluster.Print()
 
      if self.recoSplitcalHPL.GetSize() == i:
        self.recoSplitcalHPL.Expand(i+1000)
-     self.recoSplitcalHPL[k]=aCluster
+     self.recoSplitcalHPL[i]=aCluster
 
-   self.recoSplitcal.Compress() #remove empty slots from array
-
-
-# #################
+   self.recoSplitcalHPL.Compress() #remove empty slots from array
+ #################
    # # visualisation #
    # #################
 
@@ -560,8 +627,70 @@ class ShipDigiReco:
    return list_subclusters_excluding_fragments
 
 
+ def GetHPLSubclustersExcludingFragments(self):
+
+   list_HPLsubclusters_excluding_fragments = {}
+
+   fragment_indices = []
+   subclusters_indices = []
+   for k in self.list_subclusters_of_hits_HPL:         
+     subcluster_size = len(self.list_subclusters_of_hits_HPL[k])
+     if subcluster_size < 5: #FIXME: it can be tuned on a physics case (maybe use fraction of hits or energy)
+       fragment_indices.append(k)
+     else: 
+       subclusters_indices.append(k)
+   # if len(subclusters_indices) > 1:
+   #   print "--- digitizeSplitcal - *** CLUSTER NEED TO BE SPLIT - set energy weight"
+   # else: 
+   #   print "--- digitizeSplitcal - CLUSTER DOES NOT NEED TO BE SPLIT "
+
+   # merge fragments in the closest subcluster. If there is not subcluster but everything is fragmented, merge all the fragments together
+   minDistance = -1
+   minIndex = -1
+
+   if len(subclusters_indices) == 0 and len(fragment_indices) != 0: # only fragments
+     subclusters_indices.append(0) # merge all fragments into the first fragment
+
+   for index_fragment in fragment_indices:
+     #print "--- index_fragment = ", index_fragment
+     first_hit_fragment = self.list_subclusters_of_hits_HPL[index_fragment][0]
+     for index_subcluster in subclusters_indices:
+       #print "--- index_subcluster = ", index_subcluster
+       first_hit_subcluster = self.list_subclusters_of_hits_HPL[index_subcluster][0]
+       if first_hit_fragment.IsX(): 
+         distance = fabs(first_hit_fragment.GetX()-first_hit_subcluster.GetX())
+       else: 
+         distance = fabs(first_hit_fragment.GetY()-first_hit_subcluster.GetY())
+       if (minDistance < 0 or distance < minDistance):  
+         minDistance = distance
+         minIndex = index_subcluster
+
+     # for h in self.list_subclusters_of_hits_HPL[index_fragment]:
+     #   h.SetClusterIndex(minIndex)
+
+     #print "--- minIndex = ", minIndex
+     if minIndex != index_fragment: # in case there were only fragments - this is to prevent to sum twice fragment 0
+       #print "--- BEFORE - len(self.list_subclusters_of_hits_HPL[minIndex]) = ", len(self.list_subclusters_of_hits_HPL[minIndex])
+       self.list_subclusters_of_hits_HPL[minIndex] += self.list_subclusters_of_hits_HPL[index_fragment] 
+       #print "--- AFTER - len(self.list_subclusters_of_hits_HPL[minIndex]) = ", len(self.list_subclusters_of_hits_HPL[minIndex])
+
+
+   for counter, index_subcluster in enumerate(subclusters_indices):
+     list_subclusters_excluding_fragments[counter] = self.list_subclusters_of_hits_HPL[index_subcluster]
+
+   return list_subclusters_excluding_fragments
+
+
 
  def GetClusterEnergy(self, list_hits):
+   energy = 0
+   for hit in list_hits: 
+     energy += hit.GetEnergy()
+   return energy
+
+
+
+ def GetHPLClusterEnergy(self, list_hits):
    energy = 0
    for hit in list_hits: 
      energy += hit.GetEnergy()
@@ -622,6 +751,59 @@ class ShipDigiReco:
    return list_hits_in_cluster
 
 
+ def ClusteringHPL(self): 
+
+   list_hits_in_HPLcluster = {}
+   cluster_index = -1
+
+   for i,hit in enumerate(self.input_hits_HPL):
+     if hit.IsUsed()==1:
+       continue
+
+     neighbours = self.getNeighboursHPL(hit)
+     # hit.Print()
+     # #print "--- digitizeSplitcal - index of unused hit = ", i
+     # print '--- digitizeSplitcal - hit has n neighbours = ', len(neighbours)
+
+     if len(neighbours) < 1:
+       # # hit.SetClusterIndex(-1) # lonely fragment
+       # print '--- digitizeSplitcal - lonely fragment '
+       continue
+
+     cluster_index = cluster_index + 1
+     hit.SetIsUsed(1)
+     # hit.SetClusterIndex(cluster_index)
+     list_hits_in_HPLcluster[cluster_index] = []
+     list_hits_in_HPLcluster[cluster_index].append(hit)
+     #print '--- digitizeSplitcal - cluster_index = ', cluster_index
+
+     for neighbouringHit in neighbours:
+       # print '--- digitizeSplitcal - in neighbouringHit - len(neighbours) = ', len(neighbours)
+
+       if neighbouringHit.IsUsed()==1: 
+         continue
+
+       # neighbouringHit.SetClusterIndex(cluster_index)
+       neighbouringHit.SetIsUsed(1)
+       list_hits_in_HPLcluster[cluster_index].append(neighbouringHit)
+       
+       # ## test ###
+       # # for step 2, add hits of different type to subcluster but to not look for their neighbours
+       # not_same_type = hit.IsX() != neighbouringHit.IsX()
+       # if self.step==2 and not_same_type:
+       #   continue
+       # ###########
+
+       expand_neighbours = self.getNeighboursHPL(neighbouringHit)
+       # print '--- digitizeSplitcal - len(expand_neighbours) = ', len(expand_neighbours)
+
+       if len(expand_neighbours) >= 1:
+         for additionalHit in expand_neighbours:
+           if additionalHit not in neighbours:
+             neighbours.append(additionalHit)
+
+   return list_hits_in_HPLcluster
+
 
  def getNeighbours(self,hit):
 
@@ -681,6 +863,64 @@ class ShipDigiReco:
 
    return list_neighbours
 
+
+ def getNeighboursHPL(self,hit):
+
+   list_neighbours = []
+   err_x_1 = hit.GetXError()
+   err_y_1 = hit.GetYError()
+   err_z_1 = hit.GetZError()
+
+   layer_1 = hit.GetLayerNumber()
+
+   # allow one or more 'missing' hit in x/y: not large difference between 1 (no gap) or 2 (one 'missing' hit)
+   max_gap = 2.
+   if hit.IsX(): err_x_1 = err_x_1*max_gap  
+   if hit.IsY(): err_y_1 = err_y_1*max_gap  
+
+   for hit2 in self.input_hits_HPL:
+     if hit2 is not hit:
+       Dx = fabs(hit2.GetX()-hit.GetX())
+       Dy = fabs(hit2.GetY()-hit.GetY())
+       Dz = fabs(hit2.GetZ()-hit.GetZ())
+       err_x_2 = hit2.GetXError()
+       err_y_2 = hit2.GetYError()
+       err_z_2 = hit2.GetZError()
+
+       # layer_2 = hit2.GetLayerNumber()
+       # Dlayer = fabs(layer_2-layer_1)
+
+       # allow one or more 'missing' hit in x/y
+       if hit2.IsX(): err_x_2 = err_x_2*max_gap
+       if hit2.IsY(): err_y_2 = err_y_2*max_gap
+
+       if self.step == 1: # or self.step == 2: 
+         # use Dz instead of Dlayer due to split of 1m between the 2 parts of the calo 
+         #if ((Dx<=(err_x_1+err_x_2) or Dy<=(err_y_1+err_y_2)) and Dz<=2*(err_z_1+err_z_2)):
+         #if ((Dx<=(err_x_1+err_x_2) and Dy<=(err_y_1+err_y_2)) and Dz<=2*(err_z_1+err_z_2)):
+         if hit.IsX():
+           if (Dx<=(err_x_1+err_x_2) and Dz<=2*(err_z_1+err_z_2) and ((Dy<=(err_y_1+err_y_2) and Dz>0.) or (Dy==0)) ):
+                 list_neighbours.append(hit2)
+         if hit.IsY():
+           if (Dy<=(err_y_1+err_y_2) and Dz<=2*(err_z_1+err_z_2) and ((Dx<=(err_x_1+err_x_2) and Dz>0.) or (Dx==0)) ):
+                 list_neighbours.append(hit2)
+
+       elif self.step == 2:
+         #for step 2 relax or remove at all condition on Dz 
+         #(some clusters were split erroneously along z while here one wants to split only in x/y )
+         # first try: relax z condition 
+         if hit.IsX():
+           if (Dx<=(err_x_1+err_x_2) and Dz<=6*(err_z_1+err_z_2) and ((Dy<=(err_y_1+err_y_2) and Dz>0.) or (Dy==0)) ):
+           #if (Dx<=(err_x_1+err_x_2) and Dz<=6*(err_z_1+err_z_2) and Dy<=(err_y_1+err_y_2) and Dz>0.):
+                 list_neighbours.append(hit2)
+         if hit.IsY():
+           if (Dy<=(err_y_1+err_y_2) and Dz<=6*(err_z_1+err_z_2) and ((Dx<=(err_x_1+err_x_2) and Dz>0.) or (Dx==0)) ):
+           #if (Dy<=(err_y_1+err_y_2) and Dz<=6*(err_z_1+err_z_2) and Dx<=(err_x_1+err_x_2) and Dz>0. ):
+                 list_neighbours.append(hit2)
+       else:
+         print("-- getNeighbours: ERROR: step not defined ")
+
+   return list_neighbours
 
 
 
