@@ -310,7 +310,7 @@ class ShipDigiReco:
 
    self.step = 1 
    self.input_hits = list_hits_above_threshold
-   self.input_HPLhits = list_hits_above_threshold_HPL
+   self.input_hits_HPL = list_hits_above_threshold_HPL
    list_clusters_of_hits = self.Clustering()
    list_clusters_of_hits_HPL = self.ClusteringHPL()
 
@@ -372,10 +372,14 @@ class ShipDigiReco:
 
      weights_from_x_splitting_HPL = {}
      for index_subcluster in list_of_subclusters_x_HPL:
-       subcluster_energy_x_HPL = self.GetHPLClusterEnergy(list_of_subclusters_x[index_subcluster])
-       HPLweight = subcluster_energy_x_HPL/HPLcluster_energy_x
+       subcluster_energy_x_HPL = self.GetHPLClusterEnergy(list_of_subclusters_x_HPL[index_subcluster])
+       try:
+         HPLweight = subcluster_energy_x_HPL/cluster_energy_x_HPL
+       except:
+         print("Division by 0 !")
+         HPLweight=1
        # print "======> weight = ", weight 
-       weights_from_x_splitting[index_subcluster] = weight
+       weights_from_x_splitting[index_subcluster] = HPLweight
      ###########       
 
      #re-run reclustering only in yz plane possibly with different criteria 
@@ -515,18 +519,19 @@ class ShipDigiReco:
 
 
 
+   for i in list_final_clusters_HPL: 
 # in list_final_clusters:
      # print '------------------------'
      # print '------ digitizeSplitcal - cluster n = ', i 
      # print '------ digitizeSplitcal - cluster size = ', len(list_final_clusters[i]) 
-
+   
      for j,h in enumerate(list_final_clustersi_HPL[i]):
        if j==0: aCluster = ROOT.splitcalHPLCluster(h)
        else: aCluster.AddHit(h)
-
+	
      aCluster.SetIndex(int(i))
      aCluster.ComputeEtaPhiE()
-     # aCluster.Print()
+     aCluster.Print()
 
      if self.recoSplitcalHPL.GetSize() == i:
        self.recoSplitcalHPL.Expand(i+1000)
@@ -629,16 +634,18 @@ class ShipDigiReco:
 
  def GetHPLSubclustersExcludingFragments(self):
 
-   list_HPLsubclusters_excluding_fragments = {}
+   list_subclusters_excluding_fragments = {}
 
    fragment_indices = []
    subclusters_indices = []
+   print ("self.list_subclusters_of_hits_HPL", self.list_subclusters_of_hits_HPL)
    for k in self.list_subclusters_of_hits_HPL:         
      subcluster_size = len(self.list_subclusters_of_hits_HPL[k])
-     if subcluster_size < 5: #FIXME: it can be tuned on a physics case (maybe use fraction of hits or energy)
-       fragment_indices.append(k)
-     else: 
-       subclusters_indices.append(k)
+     #if subcluster_size < 2: #FIXME: it can be tuned on a physics case (maybe use fraction of hits or energy)
+     #  fragment_indices.append(k)
+     #else:
+     #attempt at forcing everything into a subcluster 
+     subclusters_indices.append(k)
    # if len(subclusters_indices) > 1:
    #   print "--- digitizeSplitcal - *** CLUSTER NEED TO BE SPLIT - set energy weight"
    # else: 
@@ -677,7 +684,7 @@ class ShipDigiReco:
 
    for counter, index_subcluster in enumerate(subclusters_indices):
      list_subclusters_excluding_fragments[counter] = self.list_subclusters_of_hits_HPL[index_subcluster]
-
+   print(list_subclusters_excluding_fragments.keys())
    return list_subclusters_excluding_fragments
 
 
