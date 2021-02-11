@@ -23,7 +23,7 @@ import global_variables
 import rootUtils as ut
 import shipunit as u
 import shipRoot_conf
-
+print("prep")
 shipRoot_conf.configure()
 
 parser = ArgumentParser()
