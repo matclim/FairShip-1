@@ -408,7 +408,7 @@ def configure(run,ship_geo):
  Muon.SetActiveThickness(ship_geo.Muon.ActiveThickness)
  Muon.SetFilterThickness(ship_geo.Muon.FilterThickness)
  detectorList.append(Muon)
-
+ 
  upstreamTagger = ROOT.UpstreamTagger("UpstreamTagger", ROOT.kTRUE)
  upstreamTagger.SetZposition(ship_geo.UpstreamTagger.Z_Position)
  upstreamTagger.SetSizeX_Glass(ship_geo.UpstreamTagger.X_Glass)
@@ -447,7 +447,7 @@ def configure(run,ship_geo):
  upstreamTagger.SetSizeY_Strip64(ship_geo.UpstreamTagger.Y_Strip64)
  upstreamTagger.SetSizeZ_Strip(ship_geo.UpstreamTagger.Z_Strip)
  detectorList.append(upstreamTagger)
-
+ 
  timeDet = ROOT.TimeDet("TimeDet", ROOT.kTRUE)
  timeDet.SetZposition(ship_geo.TimeDet.z)
  timeDet.SetBarZspacing(ship_geo.TimeDet.dzBarRow, ship_geo.TimeDet.dzBarCol)
@@ -456,16 +456,15 @@ def configure(run,ship_geo):
  timeDet.SetSizeY(2 * ship_geo.TimeDet.DY)
  detectorList.append(timeDet)
 
-#-----   Magnetic field   -------------------------------------------
+##-----   Magnetic field   -------------------------------------------
  if not hasattr(ship_geo.Bfield,"fieldMap"):
   if ship_geo.strawDesign == 4 or ship_geo.strawDesign == 10 : fMagField = ROOT.ShipBellField("wilfried", ship_geo.Bfield.max ,ship_geo.Bfield.z,2,ship_geo.Yheight/2.*u.m )  
   else :                                                      fMagField = ROOT.ShipBellField("wilfried", ship_geo.Bfield.max ,ship_geo.Bfield.z,1,ship_geo.Yheight/2.*u.m )  
   if ship_geo.muShieldDesign==6: fMagField.IncludeTarget(ship_geo.target.xy, ship_geo.target.z0, ship_geo.target.length)
   run.SetField(fMagField)
-#
- exclusionList = []
- #exclusionList = ["Muon","Ecal","Hcal","Strawtubes","TargetTrackers","NuTauTarget","HighPrecisionTrackers",\
- #                 "Veto","Magnet","MuonShield","TargetStation","NuTauMudet","EmuMagnet", "TimeDet", "UpstreamTagger"]
+
+ #exclusionList = []
+ exclusionList = ["Muon","Strawtubes","TargetTrackers","NuTauTarget","Veto","Magnet","MuonShield","TargetStation","NuTauMudet","EmuMagnet", "TimeDet", "UpstreamTagger"]
 
  for x in detectorList:
    if x.GetName() in exclusionList: continue

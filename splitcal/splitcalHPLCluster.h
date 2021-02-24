@@ -52,7 +52,6 @@ class splitcalHPLCluster : public TObject
     TVector3 GetStartPoint() {return _start; }
     TVector3 GetEndPoint() {return _end; }
     std::vector<splitcalHit* >& GetVectorOfHits() {return _vectorOfHits;}
-
     //regression LinearRegression(std::vector<double >& x, std::vector<double >& y);
     void ComputeEtaPhiE();
     
@@ -61,7 +60,7 @@ class splitcalHPLCluster : public TObject
     double GetInterceptZX() {return _qZX;}
     double GetSlopeZY() {return _mZY;}
     double GetInterceptZY() {return _qZY;}
-
+    double GetX(int i=0);
   private:
     /** Copy constructor **/
     splitcalHPLCluster(const splitcalHPLCluster& cluster);

@@ -135,7 +135,7 @@ SHiP = shipDigiReco.ShipDigiReco(outFile,fgeo)
 options.nEvents   = min(SHiP.sTree.GetEntries(),options.nEvents)
 # main loop
 for global_variables.iEvent in range(options.firstEvent, options.nEvents):
-    if global_variables.iEvent % 1000 == 0 or global_variables.debug:
+    if global_variables.iEvent % 10 == 0 or global_variables.debug:
         print('event ', global_variables.iEvent)
     rc = SHiP.sTree.GetEvent(global_variables.iEvent)
     SHiP.digitize()

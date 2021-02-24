@@ -27,8 +27,8 @@ splitcalHit::splitcalHit()
  flag = true;
 }
 // -----   Standard constructor   ------------------------------------------
-splitcalHit::splitcalHit(Int_t detID, Float_t tdc)
-  : ShipHit(detID,tdc)
+splitcalHit::splitcalHit(Int_t _detID, Float_t tdc)
+  : ShipHit(_detID,tdc)
 {
  flag = true;
 }
@@ -44,22 +44,22 @@ splitcalHit::splitcalHit(splitcalPoint* p, Double_t t0)
   double pointZ =  p->GetZ();
   double pointT =  p->GetTime();
   double pointE =  p->GetEnergyLoss();
-  int detID =  p->GetDetectorID();
+  _detID =  p->GetDetectorID();
 
   //fdigi = t0 + t; 
   fdigi = t0 ;  
   // SetDigi(SetTimeRes(fdigi));
-  SetDetectorID(detID);
+  SetDetectorID(_detID);
 
   TGeoNavigator* navigator = gGeoManager->GetCurrentNavigator();
   navigator->cd("cave/SplitCalDetector_1");
   TGeoVolume* caloVolume = navigator->GetCurrentVolume();
   // caloVolume->PrintNodes();
 
-  std::string stripName = GetDetectorElementName(detID); // it also sets if strip gives x or y coordinate
+  std::string stripName = GetDetectorElementName(_detID); // it also sets if strip gives x or y coordinate
 
   int isPrec, nL, nMx, nMy, nS;
-  Decoder(detID, isPrec, nL, nMx, nMy, nS);
+  Decoder(_detID, isPrec, nL, nMx, nMy, nS);
 
   SetIDs(isPrec, nL, nMx, nMy, nS);
 

@@ -37,6 +37,14 @@ splitcalHPLCluster::splitcalHPLCluster(splitcalHit* h)
  
 }
 
+double splitcalHPLCluster::GetX(int i){
+
+	return _vectorOfHits.at(i)->GetX();
+
+
+}
+
+
 void splitcalHPLCluster::Clusterize(){
 	//pick seed for Cluster
 	splitcalHit *Seedhit;

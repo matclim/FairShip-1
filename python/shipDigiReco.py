@@ -263,7 +263,6 @@ class ShipDigiReco:
    index = 0
    for aMCPoint in self.sTree.splitcalPoint:
      aHit = ROOT.splitcalHit(aMCPoint,self.sTree.t0)
-     print("layerstatus",aHit.GetIsPrecisionLayer())
      detID = aHit.GetDetectorID()
      if detID not in listOfDetID:
        if self.digiSplitcal.GetSize() == index: 
@@ -289,12 +288,12 @@ class ShipDigiReco:
    list_hits_above_threshold_HPL = []
    # print '--- digitizeSplitcal - self.digiSplitcal.GetSize() = ', self.digiSplitcal.GetSize()  
    for hit in self.digiSplitcal:
-     print("Hitstatus",hit.GetIsPrecisionLayer())
-     if hit.GetEnergy() > noise_energy_threshold:
+     print("HPLStatus ",hit.GetIsPrecisionLayer())
+     if(hit.GetEnergy() > noise_energy_threshold and !hit.GetIsPrecisionLayer()):
        hit.SetIsUsed(0)
        # hit.SetEnergyWeight(1)
        list_hits_above_threshold.append(hit)
-     if ((hit.GetEnergy() > noise_energy_threshold_HPL) and (hit.GetIsPrecisionLayer())):
+     if((hit.GetEnergy() > noise_energy_threshold_HPL) and (hit.GetIsPrecisionLayer())):
        print("HPLHit",hit.GetX()) 
        hit.SetIsUsed(0)
        # hit.SetEnergyWeight(1)
@@ -419,12 +418,12 @@ class ShipDigiReco:
      ########### HPL Clustering #########
 
      print("number of hits of threshold HPL",len(list_hits_above_threshold_HPL))
+
      for j,h in enumerate(list_hits_above_threshold_HPL):
         if j==0: aCluster = ROOT.splitcalHPLCluster(h)
         else:  aCluster.AddHit(h)
      aCluster.SetIndex(int(i))
      # aCluster.Print()
-
      if self.recoSplitcalHPL.GetSize() == i:
        self.recoSplitcalHPL.Expand(i+1000)
      self.recoSplitcalHPL[i]=aCluster
